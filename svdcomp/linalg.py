@@ -123,6 +123,9 @@ def _jacobi_tall(A, tol, max_sweeps):
     W = np.swapaxes(A, -1, -2).reshape((-1, n, m)).copy()
     V = np.broadcast_to(np.eye(n), (W.shape[0], n, n)).copy()  # rows = columns of V
     rounds = _round_robin(n)
+    # Absolute floor: inner products below eps^2 ||A||_F^2 are numerical dust.
+    # Without it, columns that are almost zero keep "rotating" by t ~ 0 forever.
+    floor = np.finfo(float).eps ** 2 * np.einsum("bij,bij->b", W, W)[:, None]
 
     for _ in range(max_sweeps):
         rotated = False
@@ -131,14 +134,14 @@ def _jacobi_tall(A, tol, max_sweeps):
             alpha = np.einsum("bij,bij->bi", Wp, Wp)
             beta = np.einsum("bij,bij->bi", Wq, Wq)
             gamma = np.einsum("bij,bij->bi", Wp, Wq)
-            active = np.abs(gamma) > tol * np.sqrt(alpha * beta)
+            active = (np.abs(gamma) > tol * np.sqrt(alpha * beta)) & (np.abs(gamma) > floor)
             if not active.any():
                 continue
             rotated = True
             # Solve t^2 + 2 zeta t - 1 = 0 for the smaller root (|angle| <= pi/4).
             g = np.where(active, gamma, 1.0)
             zeta = (beta - alpha) / (2.0 * g)
-            t = np.where(zeta >= 0, 1.0, -1.0) / (np.abs(zeta) + np.sqrt(1.0 + zeta * zeta))
+            t = np.where(zeta >= 0, 1.0, -1.0) / (np.abs(zeta) + np.hypot(1.0, zeta))
             t = np.where(active, t, 0.0)
             c = 1.0 / np.sqrt(1.0 + t * t)
             s = (c * t)[..., None]
