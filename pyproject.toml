@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "svdcomp"
+version = "1.0.0"
+description = "Image compression with a from-scratch Singular Value Decomposition (MAT248 project)"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Varun Karthic"}]
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "flask>=3.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+docs = ["sphinx>=7", "sphinx-rtd-theme>=2"]
+
+[project.scripts]
+svdcomp = "svdcomp.cli:main"
+svdcomp-web = "svdcomp.web:main"
+
+[tool.setuptools]
+packages = ["svdcomp"]
+
+[tool.setuptools.package-data]
+svdcomp = ["templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

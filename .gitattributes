@@ -1,0 +1,11 @@
+* text=auto eol=lf
+*.py   text diff=python
+*.rst  text
+*.md   text diff=markdown
+*.html text diff=html
+*.png  binary
+*.bmp  binary
+*.ppm  binary
+*.pgm  binary
+*.jpg  binary
+docs/**    linguist-documentation
