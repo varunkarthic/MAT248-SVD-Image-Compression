@@ -14,7 +14,7 @@ dependencies = ["numpy>=1.24", "flask>=3.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
-docs = ["sphinx>=7", "sphinx-rtd-theme>=2"]
+docs = ["sphinx>=7", "furo>=2024.1", "sphinx-design>=0.5", "sphinx-copybutton>=0.5", "sphinxcontrib-mermaid>=0.9"]
 
 [project.scripts]
 svdcomp = "svdcomp.cli:main"

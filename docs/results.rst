@@ -1,13 +1,68 @@
 Results
 =======
 
-These measurements were taken on an Apple M4 laptop with Python 3.14 and
-NumPy 2.5. The test image is a 640 × 640 photo-like gradient wallpaper, used
-in grayscale and cropped to 512 × 512 where noted. Reproduce them with
-``svdcomp benchmark``.
+Interactive: explore the rank
+-----------------------------
 
-Rank versus quality (512 × 512 grayscale, exact SVD)
-----------------------------------------------------
+Drag the slider to move through the rank-*k* reconstructions of a
+256 × 256 photo. Each image and every number below was produced by
+``svdcomp`` itself (``scripts/make_figures.py``).
+
+.. raw:: html
+
+   <div class="svd-slider" data-base="_static/figures/">Loading the interactive slider…</div>
+
+.. note::
+
+   Past :math:`k^\ast = mn/(m+n+1) \approx 127.8` the factors take *more*
+   numbers than the pixels, so the ratio drops below 1. Compression only pays
+   off for :math:`k < k^\ast`.
+
+The spectrum
+------------
+
+.. image:: _static/figures/sigma.svg
+   :alt: Singular values of the red, green and blue channels on a log scale
+
+.. image:: _static/figures/error.svg
+   :alt: Relative squared error of the best rank-k approximation on a log scale
+
+The singular values fall by two orders of magnitude within the first 20
+layers. By Eckart–Young the right-hand curve is exactly the discarded share
+of :math:`\sum_i\sigma_i^2`, so it is the best that *any* rank-*k* image can
+do.
+
+Global versus adaptive blocks
+-----------------------------
+
+.. grid:: 1 1 3 3
+   :gutter: 2
+
+   .. grid-item-card:: Global, k = 35
+
+      .. image:: _static/figures/k035.png
+
+      3.65× · 26.65 dB · SSIM 0.774
+
+   .. grid-item-card:: Adaptive 16 × 16, τ = 0.95
+
+      .. image:: _static/figures/blocks.png
+
+      **4.25×** · **27.94 dB** · SSIM **0.839**
+
+   .. grid-item-card:: Rank per tile
+
+      .. image:: _static/figures/blocks_ranks.png
+
+      Darker tiles keep more layers (0–6, mean 1.8).
+
+On this detailed photo, adaptive blocks give **more compression and better
+quality at the same time**. Rank concentrates in the detailed tiles, while
+flat background tiles get almost none. On very smooth images, such as
+gradient wallpapers, global truncation can win instead. See the table below.
+
+Rank versus quality (512 × 512 grayscale photo)
+-----------------------------------------------
 
 .. list-table::
    :header-rows: 1
@@ -49,54 +104,49 @@ Rank versus quality (512 × 512 grayscale, exact SVD)
      - 56.30
      - 0.998
 
-As predicted in :doc:`mathematics`, :math:`\sigma_1` alone carries most of the
-energy, and quality keeps improving long after "energy kept" rounds to
-100 %.
+.. dropdown:: Adaptive blocks on the same smooth image
+   :icon: table
 
-Adaptive blocks (16 × 16 tiles, same image)
--------------------------------------------
+   .. list-table::
+      :header-rows: 1
 
-.. list-table::
-   :header-rows: 1
+      * - Detail energy τ
+        - Stored numbers
+        - Ratio
+        - PSNR (dB)
+        - SSIM
+        - Mean tile rank
+      * - 0.90
+        - 17,623
+        - 14.9×
+        - 36.03
+        - 0.933
+        - 0.49
+      * - 0.95
+        - 25,906
+        - 10.1×
+        - 39.03
+        - 0.962
+        - 0.74
+      * - 0.99
+        - 46,267
+        - 5.7×
+        - 45.87
+        - 0.990
+        - 1.34
 
-   * - Detail energy τ
-     - Stored numbers
-     - Ratio
-     - PSNR (dB)
-     - SSIM
-     - Mean tile rank
-   * - 0.90
-     - 17,623
-     - 14.9×
-     - 36.03
-     - 0.933
-     - 0.49
-   * - 0.95
-     - 25,906
-     - 10.1×
-     - 39.03
-     - 0.962
-     - 0.74
-   * - 0.99
-     - 46,267
-     - 5.7×
-     - 45.87
-     - 0.990
-     - 1.34
-
-On this smooth image, global truncation is slightly better per stored number
-(12.8× at 40.0 dB versus 14.9× at 36.0 dB). Smooth gradients are close to low
-rank globally, while tiles pay a per-tile mean and cut the gradient into
-pieces. Block mode does better on images that mix flat regions with localised
-detail, which is the case PatchSVD targets.
+   On this smooth gradient, global truncation is slightly better per stored
+   number (12.8× at 40.0 dB versus 14.9× at 36.0 dB).
 
 Runtime
 -------
 
+Measured on an Apple M4 with Python 3.14 and NumPy 2.5, on grayscale input.
+
 .. list-table::
    :header-rows: 1
 
-   * - Grayscale size
+   * - Size
      - Exact Jacobi SVD
      - Randomized SVD (k = 50)
    * - 128 × 128
@@ -110,5 +160,11 @@ Runtime
      - 0.06 s
 
 The exact SVD grows as :math:`O(n^3)` and the randomized one as
-:math:`O(mnk)`. This is why the web UI defaults to the randomized method and
-only offers the exact one for images up to 512 × 512.
+:math:`O(mnk)`. That is why the web UI defaults to the randomized method.
+
+.. seealso::
+
+   :doc:`mathematics` for the theory behind these numbers, and
+   ``svdcomp benchmark`` to reproduce them on your own images.
+
+Image credit: astronaut Eileen Collins, NASA (public domain).

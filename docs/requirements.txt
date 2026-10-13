@@ -1,2 +1,5 @@
 sphinx>=7
-sphinx-rtd-theme>=2
+furo>=2024.1
+sphinx-design>=0.5
+sphinx-copybutton>=0.5
+sphinxcontrib-mermaid>=0.9

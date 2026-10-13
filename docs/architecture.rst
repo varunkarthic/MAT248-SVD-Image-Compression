@@ -24,30 +24,25 @@ Design goals
 Layered view
 ------------
 
-.. code-block:: text
+.. mermaid::
 
-   ┌──────────────────────────────────────────────────────────────────────┐
-   │  Front ends                                                          │
-   │   cli.py  (argparse)        web.py + templates/index.html (Flask)    │
-   └───────────────┬───────────────────────────────┬──────────────────────┘
-                   │                               │
-   ┌───────────────▼───────────────────────────────▼──────────────────────┐
-   │  Application layer                                                   │
-   │   compress.py   decompose · reconstruct · compress · compress_blocks │
-   │                 rank_for_energy · storage_cost                       │
-   │   metrics.py    mse · psnr · ssim · relative_error                   │
-   └───────────────┬───────────────────────────────┬──────────────────────┘
-                   │                               │
-   ┌───────────────▼──────────────┐   ┌────────────▼─────────────────────┐
-   │  Numerical core  linalg.py   │   │  Codecs  formats.py              │
-   │   householder_qr             │   │   PNG  (chunks, CRC, filters)    │
-   │   jacobi_svd (batched)       │   │   BMP  (8/24/32-bit)             │
-   │   randomized_svd             │   │   PNM  (P2/P3/P5/P6)             │
-   └───────────────┬──────────────┘   └────────────┬─────────────────────┘
-                   │                               │
-   ┌───────────────▼───────────────────────────────▼──────────────────────┐
-   │  Platform: NumPy arrays (ndarray arithmetic only) · stdlib zlib      │
-   └──────────────────────────────────────────────────────────────────────┘
+   flowchart TB
+       subgraph FE["Front ends"]
+           CLI["cli.py<br/>argparse"]
+           WEB["web.py + templates/index.html<br/>Flask"]
+       end
+       subgraph APP["Application layer"]
+           COMP["compress.py<br/>decompose · reconstruct · compress<br/>compress_blocks · rank_for_energy"]
+           MET["metrics.py<br/>MSE · PSNR · SSIM · relative error"]
+       end
+       subgraph CORE["Core (independent of each other)"]
+           LIN["linalg.py<br/>householder_qr · jacobi_svd · randomized_svd"]
+           FMT["formats.py<br/>PNG · BMP · PNM codecs"]
+       end
+       NP[("NumPy ndarray arithmetic · stdlib zlib")]
+       FE --> APP
+       APP --> CORE
+       CORE --> NP
 
 Each layer imports only from the layers below it. ``linalg`` and ``formats``
 do not know about each other, so the numerical core can be tested on plain
@@ -102,22 +97,34 @@ Data flow
 
 Compressing an upload in the web UI:
 
-.. code-block:: text
+.. mermaid::
 
-   browser ──file──► POST /api/decompose
-                       │ formats.read_image(bytes)     → uint8 (H,W,C)
-                       │ validate size / channels
-                       │ compress.decompose(img, method)
-                       │      └─ linalg.jacobi_svd  (batched over C)
-                       │         or linalg.randomized_svd per channel
-                       │ cache[token] = (img, factors)  (bounded LRU)
-                       ◄── {token, shape, singular values, max rank}
-
-   slider ──k──────► GET /api/reconstruct?token&k
-                       │ compress.reconstruct(factors, k)   O(k·m·n)
-                       │ metrics.psnr / ssim / relative_error
-                       │ formats.encode_png
-                       ◄── {png (base64), k, ratio, psnr, ssim, ...}
+   sequenceDiagram
+       autonumber
+       actor U as Browser
+       participant W as Flask (web.py)
+       participant F as formats.py
+       participant C as compress.py
+       participant L as linalg.py
+       participant M as metrics.py
+       U->>W: POST /api/upload (image bytes)
+       W->>F: decode_image(bytes)
+       F-->>W: uint8 array (H, W, C)
+       W-->>U: token, size, original preview
+       U->>W: POST /api/decompose (token, method)
+       W->>C: decompose(img, method)
+       C->>L: jacobi_svd (batched over C) / randomized_svd
+       L-->>C: U, σ, Vᵀ
+       C-->>W: Factors (cached in LRU)
+       W-->>U: σ per channel, cumulative energy
+       loop every slider move
+           U->>W: GET /api/reconstruct (token, k)
+           W->>C: result_for_rank(img, factors, k)
+           C->>M: psnr · ssim · relative_error
+           C-->>W: A_k + metrics
+           W->>F: encode_png(A_k)
+           W-->>U: PNG data URL, ratio, metrics
+       end
 
 The expensive step, the SVD, runs **once** per upload. Moving the slider only
 re-multiplies the cached factors, which costs :math:`O(kmn)` and takes

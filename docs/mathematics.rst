@@ -1,10 +1,28 @@
 Mathematics
 ===========
 
+.. grid:: 1 1 3 3
+   :gutter: 2
+
+   .. grid-item-card:: Decompose
+      :text-align: center
+
+      :math:`A = U\Sigma V^T = \sum_i \sigma_i u_i v_i^T`
+
+   .. grid-item-card:: Truncate
+      :text-align: center
+
+      :math:`A_k = \sum_{i\le k} \sigma_i u_i v_i^T`, stored in :math:`k(m+n+1)` numbers
+
+   .. grid-item-card:: Guarantee
+      :text-align: center
+
+      :math:`\lVert A-A_k\rVert_F^2 = \sum_{i>k}\sigma_i^2` is optimal
+
 This chapter develops the mathematics behind ``svdcomp``, from the definition of
 the Singular Value Decomposition to the algorithms that compute it and the
 metrics that judge the result. Every formula here is implemented in the
-package, and the section headings name the function that implements it.
+package, and the text names the function that implements it.
 
 Images as matrices
 ------------------
@@ -29,75 +47,76 @@ matrix being *close to low rank*, and the SVD measures exactly how close.
 The Singular Value Decomposition
 --------------------------------
 
-Theorem (SVD)
-~~~~~~~~~~~~~
+.. admonition:: Theorem (SVD)
+   :class: tip
 
-Every real matrix :math:`A \in \mathbb{R}^{m \times n}` with
-:math:`r = \operatorname{rank}(A)` can be factored as
+   Every real matrix :math:`A \in \mathbb{R}^{m \times n}` with
+   :math:`r = \operatorname{rank}(A)` can be factored as
 
-.. math::
+   .. math::
 
-   A = U \Sigma V^{T},
+      A = U \Sigma V^{T},
 
-where
+   where
 
-* :math:`U = [u_1 \mid \dots \mid u_m] \in \mathbb{R}^{m \times m}` is
-  orthogonal (:math:`U^TU = I_m`). Its columns are the *left singular vectors*.
-* :math:`V = [v_1 \mid \dots \mid v_n] \in \mathbb{R}^{n \times n}` is
-  orthogonal (:math:`V^TV = I_n`). Its columns are the *right singular
-  vectors*.
-* :math:`\Sigma \in \mathbb{R}^{m \times n}` is zero except on its diagonal,
-  :math:`\Sigma_{ii} = \sigma_i`, with
+   * :math:`U = [u_1 \mid \dots \mid u_m] \in \mathbb{R}^{m \times m}` is
+     orthogonal (:math:`U^TU = I_m`). Its columns are the *left singular vectors*.
+   * :math:`V = [v_1 \mid \dots \mid v_n] \in \mathbb{R}^{n \times n}` is
+     orthogonal (:math:`V^TV = I_n`). Its columns are the *right singular
+     vectors*.
+   * :math:`\Sigma \in \mathbb{R}^{m \times n}` is zero except on its diagonal,
+     :math:`\Sigma_{ii} = \sigma_i`, with
 
-  .. math::
+     .. math::
 
-     \sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_r > 0 = \sigma_{r+1} = \dots = \sigma_{\min(m,n)}.
+        \sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_r > 0 = \sigma_{r+1} = \dots = \sigma_{\min(m,n)}.
 
-The :math:`\sigma_i` are the *singular values*.
+   The :math:`\sigma_i` are the *singular values*.
 
-Proof via the spectral theorem
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. dropdown:: Proof via the spectral theorem
+   :icon: light-bulb
 
-The matrix :math:`A^TA \in \mathbb{R}^{n\times n}` is symmetric, and it is
-positive semi-definite because
 
-.. math::
+   The matrix :math:`A^TA \in \mathbb{R}^{n\times n}` is symmetric, and it is
+   positive semi-definite because
 
-   x^T A^T A x = \lVert A x \rVert_2^2 \ge 0 \quad \text{for all } x.
+   .. math::
 
-By the **spectral theorem** it has an orthonormal eigenbasis
-:math:`v_1, \dots, v_n` with real eigenvalues
-:math:`\lambda_1 \ge \dots \ge \lambda_n \ge 0`:
+      x^T A^T A x = \lVert A x \rVert_2^2 \ge 0 \quad \text{for all } x.
 
-.. math::
+   By the **spectral theorem** it has an orthonormal eigenbasis
+   :math:`v_1, \dots, v_n` with real eigenvalues
+   :math:`\lambda_1 \ge \dots \ge \lambda_n \ge 0`:
 
-   A^TA = V \Lambda V^T, \qquad \Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n).
+   .. math::
 
-Define :math:`\sigma_i = \sqrt{\lambda_i}`. Exactly :math:`r` of them are
-positive, because :math:`\operatorname{rank}(A^TA) = \operatorname{rank}(A)`.
-For :math:`i \le r` set
+      A^TA = V \Lambda V^T, \qquad \Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n).
 
-.. math::
+   Define :math:`\sigma_i = \sqrt{\lambda_i}`. Exactly :math:`r` of them are
+   positive, because :math:`\operatorname{rank}(A^TA) = \operatorname{rank}(A)`.
+   For :math:`i \le r` set
 
-   u_i = \frac{A v_i}{\sigma_i}.
+   .. math::
 
-These vectors are orthonormal:
+      u_i = \frac{A v_i}{\sigma_i}.
 
-.. math::
+   These vectors are orthonormal:
 
-   u_i^T u_j = \frac{v_i^T A^T A v_j}{\sigma_i \sigma_j}
-             = \frac{\lambda_j\, v_i^T v_j}{\sigma_i \sigma_j}
-             = \delta_{ij}.
+   .. math::
 
-Extend :math:`u_1, \dots, u_r` to an orthonormal basis of
-:math:`\mathbb{R}^m` (Gram–Schmidt). Then :math:`A v_i = \sigma_i u_i` for
-every :math:`i`, since :math:`A v_i = 0` when :math:`\sigma_i = 0`. In matrix
-form this is :math:`AV = U\Sigma`, and multiplying on the right by :math:`V^T`
-gives :math:`A = U\Sigma V^T`. :math:`\blacksquare`
+      u_i^T u_j = \frac{v_i^T A^T A v_j}{\sigma_i \sigma_j}
+                = \frac{\lambda_j\, v_i^T v_j}{\sigma_i \sigma_j}
+                = \delta_{ij}.
 
-The same argument applied to :math:`AA^T` shows that the :math:`u_i` are its
-eigenvectors. So the left singular vectors span the column space of
-:math:`A` and the right singular vectors span its row space.
+   Extend :math:`u_1, \dots, u_r` to an orthonormal basis of
+   :math:`\mathbb{R}^m` (Gram–Schmidt). Then :math:`A v_i = \sigma_i u_i` for
+   every :math:`i`, since :math:`A v_i = 0` when :math:`\sigma_i = 0`. In matrix
+   form this is :math:`AV = U\Sigma`, and multiplying on the right by :math:`V^T`
+   gives :math:`A = U\Sigma V^T`. :math:`\blacksquare`
+
+   The same argument applied to :math:`AA^T` shows that the :math:`u_i` are its
+   eigenvectors. So the left singular vectors span the column space of
+   :math:`A` and the right singular vectors span its row space.
 
 Geometric meaning
 ~~~~~~~~~~~~~~~~~
@@ -172,49 +191,51 @@ The quantity :math:`\sigma_i^2` is the **energy** carried by layer
 Optimality: the Eckart–Young–Mirsky theorem
 -------------------------------------------
 
-Theorem
-~~~~~~~
+.. admonition:: Theorem (Eckart–Young–Mirsky)
+   :class: tip
 
-For every :math:`k < r` and every matrix :math:`B` with
-:math:`\operatorname{rank}(B) \le k`,
+   For every :math:`k < r` and every matrix :math:`B` with
+   :math:`\operatorname{rank}(B) \le k`,
 
-.. math::
+   .. math::
 
-   \lVert A - A_k \rVert_2 = \sigma_{k+1} \le \lVert A - B \rVert_2,
-   \qquad
-   \lVert A - A_k \rVert_F = \Big(\sum_{i=k+1}^{r} \sigma_i^2\Big)^{1/2} \le \lVert A - B \rVert_F .
+      \lVert A - A_k \rVert_2 = \sigma_{k+1} \le \lVert A - B \rVert_2,
+      \qquad
+      \lVert A - A_k \rVert_F = \Big(\sum_{i=k+1}^{r} \sigma_i^2\Big)^{1/2} \le \lVert A - B \rVert_F .
 
-In words, **truncated SVD is the best possible rank-k approximation**, and the
-error is exactly the singular values that were thrown away.
+   In words, **truncated SVD is the best possible rank-k approximation**, and the
+   error is exactly the singular values that were thrown away.
 
-Proof (spectral norm)
-~~~~~~~~~~~~~~~~~~~~~
+.. dropdown:: Proof for the spectral norm
+   :icon: light-bulb
 
-First, :math:`A - A_k = \sum_{i>k}\sigma_i u_i v_i^T` has largest singular
-value :math:`\sigma_{k+1}`. Now let :math:`\operatorname{rank}(B)\le k`. Its
-null space has dimension at least :math:`n-k`, and
-:math:`\operatorname{span}\{v_1,\dots,v_{k+1}\}` has dimension :math:`k+1`.
-Since :math:`(n-k)+(k+1) > n`, the two subspaces share a unit vector
-:math:`w = \sum_{i\le k+1} c_i v_i` with :math:`\sum c_i^2 = 1`. Then
 
-.. math::
+   First, :math:`A - A_k = \sum_{i>k}\sigma_i u_i v_i^T` has largest singular
+   value :math:`\sigma_{k+1}`. Now let :math:`\operatorname{rank}(B)\le k`. Its
+   null space has dimension at least :math:`n-k`, and
+   :math:`\operatorname{span}\{v_1,\dots,v_{k+1}\}` has dimension :math:`k+1`.
+   Since :math:`(n-k)+(k+1) > n`, the two subspaces share a unit vector
+   :math:`w = \sum_{i\le k+1} c_i v_i` with :math:`\sum c_i^2 = 1`. Then
 
-   \lVert A - B\rVert_2^2 \ge \lVert (A-B)w \rVert_2^2 = \lVert A w\rVert_2^2
-   = \sum_{i=1}^{k+1} \sigma_i^2 c_i^2 \ge \sigma_{k+1}^2. \qquad\blacksquare
+   .. math::
 
-Proof (Frobenius norm)
-~~~~~~~~~~~~~~~~~~~~~~
+      \lVert A - B\rVert_2^2 \ge \lVert (A-B)w \rVert_2^2 = \lVert A w\rVert_2^2
+      = \sum_{i=1}^{k+1} \sigma_i^2 c_i^2 \ge \sigma_{k+1}^2. \qquad\blacksquare
 
-Weyl's inequality for singular values states
-:math:`\sigma_{i+j-1}(X+Y) \le \sigma_i(X) + \sigma_j(Y)`. Take
-:math:`X = A-B`, :math:`Y = B` and :math:`j = k+1`. Since
-:math:`\sigma_{k+1}(B) = 0`,
+.. dropdown:: Proof for the Frobenius norm
+   :icon: light-bulb
 
-.. math::
 
-   \sigma_{i+k}(A) \le \sigma_i(A - B) \quad\Longrightarrow\quad
-   \lVert A - B\rVert_F^2 = \sum_{i\ge 1}\sigma_i(A-B)^2 \ge \sum_{i\ge 1} \sigma_{i+k}(A)^2
-   = \lVert A - A_k\rVert_F^2. \qquad\blacksquare
+   Weyl's inequality for singular values states
+   :math:`\sigma_{i+j-1}(X+Y) \le \sigma_i(X) + \sigma_j(Y)`. Take
+   :math:`X = A-B`, :math:`Y = B` and :math:`j = k+1`. Since
+   :math:`\sigma_{k+1}(B) = 0`,
+
+   .. math::
+
+      \sigma_{i+k}(A) \le \sigma_i(A - B) \quad\Longrightarrow\quad
+      \lVert A - B\rVert_F^2 = \sum_{i\ge 1}\sigma_i(A-B)^2 \ge \sum_{i\ge 1} \sigma_{i+k}(A)^2
+      = \lVert A - A_k\rVert_F^2. \qquad\blacksquare
 
 Consequences used in the code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -390,23 +411,24 @@ convergence. Computing :math:`\sqrt{1+\zeta^2}` as ``hypot(1, ζ)`` prevents
 overflow when :math:`\gamma` is tiny. The same rotation is applied to the
 rows of the accumulated :math:`V`.
 
-Why it converges
-~~~~~~~~~~~~~~~~
+.. dropdown:: Why Jacobi converges
+   :icon: light-bulb
 
-Consider the Gram matrix :math:`G = W^TW` and its off-diagonal mass
-:math:`\operatorname{off}(G) = \sum_{p\ne q} g_{pq}^2`. A rotation that zeros
-:math:`g_{pq}=\gamma` is an orthogonal similarity on :math:`G`, so it preserves
-:math:`\lVert G\rVert_F`. It moves exactly :math:`2\gamma^2` from the
-off-diagonal to the diagonal:
 
-.. math::
+   Consider the Gram matrix :math:`G = W^TW` and its off-diagonal mass
+   :math:`\operatorname{off}(G) = \sum_{p\ne q} g_{pq}^2`. A rotation that zeros
+   :math:`g_{pq}=\gamma` is an orthogonal similarity on :math:`G`, so it preserves
+   :math:`\lVert G\rVert_F`. It moves exactly :math:`2\gamma^2` from the
+   off-diagonal to the diagonal:
 
-   \operatorname{off}(G') = \operatorname{off}(G) - 2\gamma^2 .
+   .. math::
 
-The off-diagonal mass therefore decreases monotonically. For cyclic orderings
-it tends to zero (Forsythe & Henrici, 1960), and convergence becomes
-**quadratic** once :math:`\operatorname{off}(G)` is small. In practice this
-takes 6–12 sweeps.
+      \operatorname{off}(G') = \operatorname{off}(G) - 2\gamma^2 .
+
+   The off-diagonal mass therefore decreases monotonically. For cyclic orderings
+   it tends to zero (Forsythe & Henrici, 1960), and convergence becomes
+   **quadratic** once :math:`\operatorname{off}(G)` is small. In practice this
+   takes 6–12 sweeps.
 
 Stopping rule
 ~~~~~~~~~~~~~
@@ -619,36 +641,40 @@ SSIM is 1 for identical images.
 A worked example
 ----------------
 
-Take
+.. dropdown:: A 2 × 2 matrix by hand
+   :icon: pencil
+   :open:
 
-.. math::
 
-   A = \begin{bmatrix} 3 & 0 \\ 4 & 5 \end{bmatrix},
-   \qquad
-   A^TA = \begin{bmatrix} 25 & 20 \\ 20 & 25 \end{bmatrix}.
+   Take
 
-The eigenvalues of :math:`A^TA` are :math:`45` and :math:`5`, with eigenvectors
-:math:`v_1 = \tfrac{1}{\sqrt2}(1,1)^T` and :math:`v_2 = \tfrac{1}{\sqrt2}(1,-1)^T`.
-Hence :math:`\sigma_1 = 3\sqrt5`, :math:`\sigma_2 = \sqrt5` and
+   .. math::
 
-.. math::
+      A = \begin{bmatrix} 3 & 0 \\ 4 & 5 \end{bmatrix},
+      \qquad
+      A^TA = \begin{bmatrix} 25 & 20 \\ 20 & 25 \end{bmatrix}.
 
-   u_1 = \frac{Av_1}{\sigma_1} = \frac{1}{\sqrt{10}}\begin{bmatrix}1\\3\end{bmatrix},
-   \qquad
-   u_2 = \frac{Av_2}{\sigma_2} = \frac{1}{\sqrt{10}}\begin{bmatrix}3\\-1\end{bmatrix}.
+   The eigenvalues of :math:`A^TA` are :math:`45` and :math:`5`, with eigenvectors
+   :math:`v_1 = \tfrac{1}{\sqrt2}(1,1)^T` and :math:`v_2 = \tfrac{1}{\sqrt2}(1,-1)^T`.
+   Hence :math:`\sigma_1 = 3\sqrt5`, :math:`\sigma_2 = \sqrt5` and
 
-The rank-1 approximation is
+   .. math::
 
-.. math::
+      u_1 = \frac{Av_1}{\sigma_1} = \frac{1}{\sqrt{10}}\begin{bmatrix}1\\3\end{bmatrix},
+      \qquad
+      u_2 = \frac{Av_2}{\sigma_2} = \frac{1}{\sqrt{10}}\begin{bmatrix}3\\-1\end{bmatrix}.
 
-   A_1 = \sigma_1 u_1 v_1^T = \frac{3\sqrt5}{\sqrt{20}}\begin{bmatrix}1&1\\3&3\end{bmatrix}
-       = \begin{bmatrix}1.5&1.5\\4.5&4.5\end{bmatrix},
+   The rank-1 approximation is
 
-and its error is
-:math:`\lVert A - A_1\rVert_F^2 = 1.5^2 + 1.5^2 + 0.5^2 + 0.5^2 = 5 = \sigma_2^2`,
-exactly as Eckart–Young predicts. The retained energy is
-:math:`E(1) = 45/50 = 90\%`.
+   .. math::
 
+      A_1 = \sigma_1 u_1 v_1^T = \frac{3\sqrt5}{\sqrt{20}}\begin{bmatrix}1&1\\3&3\end{bmatrix}
+          = \begin{bmatrix}1.5&1.5\\4.5&4.5\end{bmatrix},
+
+   and its error is
+   :math:`\lVert A - A_1\rVert_F^2 = 1.5^2 + 1.5^2 + 0.5^2 + 0.5^2 = 5 = \sigma_2^2`,
+   exactly as Eckart–Young predicts. The retained energy is
+   :math:`E(1) = 45/50 = 90\%`.
 
 Complexity summary
 ------------------
