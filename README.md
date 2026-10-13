@@ -7,7 +7,7 @@
 Every algorithm is written from scratch: SVD, QR, metrics and image codecs. NumPy provides only array arithmetic.
 
 [![CI](https://github.com/varunkarthic/MAT248-SVD-Image-Compression/actions/workflows/ci.yml/badge.svg)](https://github.com/varunkarthic/MAT248-SVD-Image-Compression/actions/workflows/ci.yml)
-[![Documentation](https://readthedocs.org/projects/mat248-svd-image-compression/badge/?version=latest)](https://mat248-svd-image-compression.readthedocs.io/en/latest/)
+[![Documentation](https://app.readthedocs.org/projects/mat248-svd-image-compression/badge/?version=latest)](https://mat248-svd-image-compression.readthedocs.io/en/latest/)
 [![Python](https://img.shields.io/badge/python-3.10–3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 <br>
@@ -54,7 +54,7 @@ A_k=\sum_{i=1}^{k}\sigma_i\,u_i v_i^{T},
 $$
 
 > [!IMPORTANT]
-> **Eckart–Young theorem.** $A_k$ is the *best* rank-$k$ approximation of $A$, and its error is exactly the energy that was thrown away:
+> **Eckart–Young theorem.** $A_k$ is the *best* approximation of $A$ with rank $k$, and its error is exactly the energy that was thrown away:
 > $\lVert A-A_k\rVert_F^2=\sum_{i>k}\sigma_i^2$.
 
 <details>
