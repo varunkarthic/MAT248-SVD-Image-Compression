@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SVD Image Compression</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2330; --muted: #5d6676; --line: #dfe3ea;
+    --accent: #3559d6; --accent-ink: #ffffff; --danger: #b42318; --ok: #1f7a4d;
+    --red: #d64545; --green: #2f9e44; --blue: #3b6fd8; --alpha: #8a8f99;
+    --radius: 12px; --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1218; --card: #171b23; --ink: #e7eaf0; --muted: #9aa3b2; --line: #2a303b;
+      --accent: #7c9cff; --accent-ink: #0f1218; --danger: #ff8a7a; --ok: #6fd3a0;
+      --red: #ff7b7b; --green: #6fd38a; --blue: #7ea6ff; --alpha: #a0a6b0;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 0 0 12px; }
+  p.lead { color: var(--muted); margin: 0 0 20px; max-width: 70ch; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+          box-shadow: var(--shadow); padding: 16px; margin-bottom: 16px; }
+  .drop { display: block; border: 2px dashed var(--line); border-radius: var(--radius); padding: 28px;
+          text-align: center; cursor: pointer; color: var(--muted); transition: border-color .15s; }
+  .drop:hover, .drop.over { border-color: var(--accent); color: var(--ink); }
+  .drop input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .drop:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; margin-bottom: 14px; }
+  .tabs button { border: 0; background: none; color: var(--muted); padding: 6px 14px; border-radius: 999px;
+                 cursor: pointer; font: inherit; }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+  .row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; }
+  label.field { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
+  select, input[type=number] { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+                               border-radius: 8px; padding: 6px 8px; min-width: 120px; }
+  button.primary { font: inherit; border: 0; background: var(--accent); color: var(--accent-ink);
+                   padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+  button.primary:disabled { opacity: .5; cursor: not-allowed; }
+  .slider { margin-top: 16px; }
+  .slider input { width: 100%; accent-color: var(--accent); }
+  .slider .val { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+  .hidden { display: none !important; }
+  .nw { white-space: nowrap; }
+  #status { min-height: 1.5em; margin: 8px 0 0; color: var(--muted); }
+  #status.error { color: var(--danger); }
+  .images { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .images figure { margin: 0; }
+  .images img { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--line);
+                background: repeating-conic-gradient(var(--line) 0 25%, transparent 0 50%) 0 0 / 16px 16px;
+                image-rendering: auto; }
+  figcaption { display: flex; justify-content: space-between; font-size: .85rem; color: var(--muted); margin-top: 6px; }
+  figcaption a { color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 16px; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .stat .k { font-size: .78rem; color: var(--muted); }
+  .stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chart h3 { font-size: .9rem; margin: 0 0 6px; font-weight: 600; }
+  .chart p { font-size: .8rem; color: var(--muted); margin: 6px 0 0; }
+  svg.plot { width: 100%; height: auto; display: block; }
+  svg.plot text { fill: var(--muted); font-size: 11px; }
+  svg.plot .grid { stroke: var(--line); }
+  svg.plot .marker { stroke: var(--ink); stroke-dasharray: 4 3; }
+  .legend { display: flex; gap: 12px; font-size: .8rem; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  #heatmap { width: 100%; image-rendering: pixelated; border-radius: 8px; border: 1px solid var(--line); }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent);
+             border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 760px) { .images, .charts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>SVD Image Compression</h1>
+  <p class="lead">Each colour channel is a matrix <em>A</em>. Keeping its top <em>k</em> singular layers,
+    <span class="nw">A<sub>k</sub> = Σ<sub>i≤k</sub> σ<sub>i</sub> u<sub>i</sub> v<sub>i</sub><sup>T</sup></span>, costs
+    <span class="nw">k(m + n + 1)</span> numbers instead of <span class="nw">m·n</span>. The SVD, the QR factorisation, the metrics and the image decoders are all
+    implemented from scratch on the server.</p>
+
+  <section class="card" aria-labelledby="up-h">
+    <h2 id="up-h">1. Upload an image</h2>
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept="image/*,.ppm,.pgm,.pnm">
+      <strong>Choose an image</strong> or drop it here<br>
+      <small>PNG, BMP, PGM/PPM are decoded by our own codecs; JPEG, WebP, GIF are converted to PNG in your browser first.</small>
+    </label>
+    <p id="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="card hidden" id="controls" aria-labelledby="ctl-h">
+    <h2 id="ctl-h">2. Compress</h2>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-global" aria-selected="true" aria-controls="pane-global">Global rank k</button>
+      <button role="tab" id="tab-blocks" aria-selected="false" aria-controls="pane-blocks">Adaptive blocks</button>
+    </div>
+
+    <div id="pane-global" role="tabpanel" aria-labelledby="tab-global">
+      <div class="row">
+        <label class="field">SVD algorithm
+          <select id="method">
+            <option value="randomized">Randomized (fast, leading triplets)</option>
+            <option value="exact">Exact one-sided Jacobi (full spectrum)</option>
+          </select>
+        </label>
+        <label class="field" id="rank-field">Rank budget
+          <input type="number" id="rank" min="1" value="{{ default_rank }}">
+        </label>
+        <button class="primary" id="run-svd">Compute SVD</button>
+      </div>
+      <div class="slider hidden" id="slider-box">
+        <label for="k">Rank k = <span class="val" id="k-val">1</span>
+          <span style="color:var(--muted)"> of <span id="k-max"></span></span></label>
+        <input type="range" id="k" min="1" max="1" value="1">
+      </div>
+    </div>
+
+    <div id="pane-blocks" role="tabpanel" aria-labelledby="tab-blocks" class="hidden">
+      <div class="row">
+        <label class="field">Tile size
+          <select id="block">
+            <option>8</option><option selected>16</option><option>32</option><option>64</option>
+          </select>
+        </label>
+        <label class="field">Detail energy kept: <span class="val" id="energy-val">95.0 %</span>
+          <input type="range" id="energy" min="0.80" max="0.999" step="0.001" value="0.95">
+        </label>
+        <button class="primary" id="run-blocks">Compress</button>
+      </div>
+      <p style="color:var(--muted);font-size:.85rem;margin:10px 0 0">Each tile stores its mean plus its own rank.
+        Ranks are allocated globally: the largest singular values across all tiles are kept until the energy target is met.</p>
+    </div>
+  </section>
+
+  <section class="card hidden" id="results" aria-labelledby="res-h">
+    <h2 id="res-h">3. Result</h2>
+    <div class="images">
+      <figure><img id="img-orig" alt="Original image"><figcaption><span>Original</span><span id="orig-info"></span></figcaption></figure>
+      <figure><img id="img-comp" alt="Compressed image"><figcaption><span id="comp-label">Compressed</span>
+        <a id="download" download="compressed.png" href="#">Download PNG</a></figcaption></figure>
+    </div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="card hidden" id="charts-card" aria-labelledby="ch-h">
+    <h2 id="ch-h">4. Spectrum</h2>
+    <div class="charts">
+      <div class="chart">
+        <h3>Singular values σ<sub>i</sub> (log scale)</h3>
+        <svg class="plot" id="plot-sigma" viewBox="0 0 520 240" role="img" aria-label="Singular value decay"></svg>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="chart">
+        <h3>Relative squared error ‖A − A<sub>k</sub>‖²<sub>F</sub> / ‖A‖²<sub>F</sub></h3>
+        <svg class="plot" id="plot-error" viewBox="0 0 520 240" role="img" aria-label="Approximation error versus rank"></svg>
+        <p>By Eckart–Young this equals the share of Σσ<sub>i</sub>² that was discarded, so it is the best any rank-k image can do.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card hidden" id="heat-card" aria-labelledby="hm-h">
+    <h2 id="hm-h">4. Rank per tile</h2>
+    <canvas id="heatmap"></canvas>
+    <p style="color:var(--muted);font-size:.85rem" id="heat-legend"></p>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { token: null, info: null, spectrum: null, mode: "global", ctrl: null, timer: null };
+const CHANNEL_COLORS = { 1: ["--ink"], 2: ["--ink", "--alpha"], 3: ["--red", "--green", "--blue"],
+                         4: ["--red", "--green", "--blue", "--alpha"] };
+const CHANNEL_NAMES = { 1: ["Gray"], 2: ["Gray", "Alpha"], 3: ["Red", "Green", "Blue"], 4: ["Red", "Green", "Blue", "Alpha"] };
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+function setStatus(msg, kind = "") {
+  const el = $("status");
+  el.className = kind;
+  el.innerHTML = kind === "busy" ? `<span class="spinner"></span>${msg}` : msg;
+}
+
+async function api(path, options = {}) {
+  const res = await fetch(path, options);
+  const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+  if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+  return body;
+}
+
+function form(obj) {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(obj)) fd.append(k, v);
+  return fd;
+}
+
+// The server decodes PNG/BMP/PNM itself; anything else is re-encoded to PNG by the browser.
+async function toUploadable(file) {
+  if (/\.(png|bmp|pgm|ppm|pnm)$/i.test(file.name) || /image\/(png|bmp|x-portable)/.test(file.type)) return file;
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width; canvas.height = bitmap.height;
+  canvas.getContext("2d").drawImage(bitmap, 0, 0);
+  const blob = await new Promise((ok) => canvas.toBlob(ok, "image/png"));
+  return new File([blob], file.name.replace(/\.\w+$/, "") + ".png", { type: "image/png" });
+}
+
+async function handleFile(file) {
+  if (!file) return;
+  setStatus(`Uploading ${file.name}…`, "busy");
+  try {
+    const upload = await toUploadable(file);
+    const info = await api("/api/upload", { method: "POST", body: form({ image: upload }) });
+    state.token = info.token; state.info = info; state.spectrum = null;
+    $("img-orig").src = info.original;
+    $("orig-info").textContent = `${info.width} × ${info.height}, ${info.channels} channel${info.channels > 1 ? "s" : ""}`;
+    $("rank").max = Math.min(info.width, info.height);
+    $("rank").value = Math.min(+$("rank").value || {{ default_rank }}, Math.min(info.width, info.height));
+    $("method").querySelector('[value="exact"]').disabled = !info.exact_allowed;
+    if (!info.exact_allowed) $("method").value = "randomized";
+    $("run-blocks").disabled = !info.blocks_allowed;
+    $("controls").classList.remove("hidden");
+    $("slider-box").classList.add("hidden");
+    $("results").classList.add("hidden");
+    $("charts-card").classList.add("hidden");
+    $("heat-card").classList.add("hidden");
+    const notes = [];
+    if (!info.exact_allowed) notes.push(`exact SVD needs ≤ {{ max_exact_pixels }} pixels`);
+    if (!info.blocks_allowed) notes.push(`adaptive blocks need ≤ {{ max_block_pixels }} pixels`);
+    setStatus(`Loaded ${file.name}.` + (notes.length ? ` Note: ${notes.join("; ")}.` : " Choose a mode below."));
+  } catch (err) {
+    setStatus(err.message, "error");
+  }
+}
+
+$("file").addEventListener("change", (e) => handleFile(e.target.files[0]));
+const drop = $("drop");
+["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => handleFile(e.dataTransfer.files[0]));
+
+function selectTab(mode) {
+  state.mode = mode;
+  $("tab-global").setAttribute("aria-selected", mode === "global");
+  $("tab-blocks").setAttribute("aria-selected", mode === "blocks");
+  $("pane-global").classList.toggle("hidden", mode !== "global");
+  $("pane-blocks").classList.toggle("hidden", mode !== "blocks");
+}
+$("tab-global").addEventListener("click", () => selectTab("global"));
+$("tab-blocks").addEventListener("click", () => selectTab("blocks"));
+$("method").addEventListener("change", () => $("rank-field").classList.toggle("hidden", $("method").value === "exact"));
+
+$("run-svd").addEventListener("click", async () => {
+  const method = $("method").value;
+  $("run-svd").disabled = true;
+  setStatus(method === "exact" ? "Running the exact Jacobi SVD (this can take a while for large images)…"
+                               : "Running the randomized SVD…", "busy");
+  const t0 = performance.now();
+  try {
+    const spec = await api("/api/decompose", { method: "POST",
+      body: form({ token: state.token, method, rank: $("rank").value }) });
+    state.spectrum = spec;
+    const slider = $("k");
+    slider.max = spec.max_rank;
+    slider.value = Math.max(1, Math.min(spec.suggested_k, spec.max_rank));
+    $("k-max").textContent = spec.max_rank;
+    $("slider-box").classList.remove("hidden");
+    setStatus(`SVD done in ${((performance.now() - t0) / 1000).toFixed(1)} s. Drag the slider to change k.`);
+    await reconstruct();
+  } catch (err) {
+    setStatus(err.message, "error");
+  } finally {
+    $("run-svd").disabled = false;
+  }
+});
+
+$("k").addEventListener("input", () => {
+  $("k-val").textContent = $("k").value;
+  if (state.spectrum) drawCharts(+$("k").value);
+  clearTimeout(state.timer);
+  state.timer = setTimeout(reconstruct, 60);
+});
+
+async function reconstruct() {
+  const k = +$("k").value;
+  $("k-val").textContent = k;
+  if (state.ctrl) state.ctrl.abort();
+  state.ctrl = new AbortController();
+  try {
+    const r = await api(`/api/reconstruct?token=${encodeURIComponent(state.token)}&k=${k}`, { signal: state.ctrl.signal });
+    showResult(r, `Rank ${r.k}`);
+    drawCharts(r.k);
+  } catch (err) {
+    if (err.name !== "AbortError") setStatus(err.message, "error");
+  }
+}
+
+$("energy").addEventListener("input", () => {
+  $("energy-val").textContent = (100 * $("energy").value).toFixed(1) + " %";
+});
+
+$("run-blocks").addEventListener("click", async () => {
+  $("run-blocks").disabled = true;
+  setStatus("Decomposing every tile…", "busy");
+  const t0 = performance.now();
+  try {
+    const r = await api("/api/blocks", { method: "POST",
+      body: form({ token: state.token, block: $("block").value, energy: $("energy").value }) });
+    showResult(r, `Adaptive ${$("block").value}×${$("block").value} tiles`);
+    $("charts-card").classList.add("hidden");
+    drawHeatmap(r.ranks);
+    setStatus(`Done in ${((performance.now() - t0) / 1000).toFixed(1)} s.`);
+  } catch (err) {
+    setStatus(err.message, "error");
+  } finally {
+    $("run-blocks").disabled = false;
+  }
+});
+
+const fmt = (x, d = 2) => (x === null || x === undefined ? "∞" : Number(x).toFixed(d));
+
+function showResult(r, label) {
+  $("img-comp").src = r.image;
+  $("download").href = r.image;
+  $("comp-label").textContent = label;
+  const m = r.metrics;
+  const tiles = [
+    ["Compression ratio", `${fmt(r.ratio)}×`],
+    ["Stored numbers", `${r.stored_values.toLocaleString()} / ${r.original_values.toLocaleString()}`],
+    ["PSNR", m.psnr === null ? "∞ dB" : `${fmt(m.psnr)} dB`],
+    ["SSIM", fmt(m.ssim, 4)],
+    ["Energy kept", `${fmt(100 * m.energy, 3)} %`],
+    ["Relative error", fmt(m.relative_error, 4)],
+  ];
+  if (m.mean_rank !== undefined) tiles.push(["Mean tile rank", fmt(m.mean_rank, 2)]);
+  $("stats").innerHTML = tiles.map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+  $("results").classList.remove("hidden");
+  $("heat-card").classList.toggle("hidden", !r.ranks);
+}
+
+// ---- charts (hand-drawn SVG) ---------------------------------------------------------------
+const W = 520, H = 240, PAD = { l: 48, r: 12, t: 10, b: 28 };
+const sx = (i, n) => PAD.l + (n <= 1 ? 0 : (i / (n - 1)) * (W - PAD.l - PAD.r));
+const sy = (v, lo, hi) => PAD.t + (1 - (v - lo) / (hi - lo || 1)) * (H - PAD.t - PAD.b);
+
+function logAxis(lo, hi) {
+  const ticks = [];
+  for (let e = Math.ceil(lo); e <= Math.floor(hi); e++) ticks.push(e);
+  return ticks;
+}
+
+function plotLog(svg, series, colors, k, n) {
+  const logs = series.map((s) => s.map((v) => Math.log10(Math.max(v, 1e-12))));
+  const flat = logs.flat();
+  let lo = Math.min(...flat), hi = Math.max(...flat);
+  if (hi - lo < 1) { lo -= 0.5; hi += 0.5; }
+  let out = "";
+  for (const e of logAxis(lo, hi)) {
+    const y = sy(e, lo, hi);
+    out += `<line class="grid" x1="${PAD.l}" x2="${W - PAD.r}" y1="${y}" y2="${y}"/>`;
+    out += `<text x="${PAD.l - 6}" y="${y + 4}" text-anchor="end">1e${e}</text>`;
+  }
+  for (const f of [0, 0.25, 0.5, 0.75, 1]) {
+    const i = Math.round(f * (n - 1));
+    out += `<text x="${sx(i, n)}" y="${H - 8}" text-anchor="middle">${i + 1}</text>`;
+  }
+  logs.forEach((s, c) => {
+    const pts = s.map((v, i) => `${sx(i, n).toFixed(1)},${sy(v, lo, hi).toFixed(1)}`).join(" ");
+    out += `<polyline fill="none" stroke="${css(colors[c])}" stroke-width="1.6" points="${pts}"/>`;
+  });
+  const xk = sx(k - 1, n);
+  out += `<line class="marker" x1="${xk}" x2="${xk}" y1="${PAD.t}" y2="${H - PAD.b}"/>`;
+  out += `<text x="${Math.min(xk + 4, W - 40)}" y="${PAD.t + 12}" style="fill:${css("--ink")}">k = ${k}</text>`;
+  svg.innerHTML = out;
+}
+
+function drawCharts(k) {
+  const spec = state.spectrum;
+  if (!spec) return;
+  const ch = spec.sigma.length;
+  const colors = CHANNEL_COLORS[ch];
+  plotLog($("plot-sigma"), spec.sigma, colors, k, spec.max_rank);
+  plotLog($("plot-error"), [spec.energy.map((e) => Math.max(1 - e, 1e-12))], ["--accent"], k, spec.max_rank);
+  $("legend").innerHTML = CHANNEL_NAMES[ch].map((name, i) =>
+    `<span><i style="background:${css(colors[i])}"></i>${name}</span>`).join("");
+  $("charts-card").classList.remove("hidden");
+}
+
+function drawHeatmap(ranks) {
+  const rows = ranks.length, cols = ranks[0].length;
+  const flat = ranks.flat(), max = Math.max(...flat, 1);
+  const canvas = $("heatmap");
+  canvas.width = cols; canvas.height = rows;
+  canvas.style.aspectRatio = `${state.info.width} / ${state.info.height}`;
+  const ctx = canvas.getContext("2d");
+  ranks.forEach((row, y) => row.forEach((v, x) => {
+    const t = v / max;  // light (rank 0) -> dark (max rank)
+    const l = 96 - 66 * t;
+    ctx.fillStyle = `hsl(225 70% ${l}%)`;
+    ctx.fillRect(x, y, 1, 1);
+  }));
+  $("heat-legend").textContent = `Lighter = fewer layers. Ranks range from ${Math.min(...flat)} to ${Math.max(...flat)}; `
+    + `mean ${(flat.reduce((a, b) => a + b, 0) / flat.length).toFixed(2)}.`;
+}
+</script>
+</body>
+</html>
