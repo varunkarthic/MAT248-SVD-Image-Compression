@@ -6,6 +6,7 @@ costs ``C * k * (m + n + 1)`` stored numbers instead of ``C * m * n``.
 """
 
 from dataclasses import dataclass, field
+from numbers import Integral
 
 import numpy as np
 
@@ -14,6 +15,7 @@ from .formats import as_uint8_image
 from .linalg import jacobi_svd, randomized_svd
 
 METHODS = ("exact", "randomized")
+ENERGY_TOLERANCE = 1e-12
 
 
 @dataclass
@@ -93,7 +95,7 @@ def rank_for_energy(s, energy, total=None):
     if total == 0:
         return 1
     cumulative = np.cumsum(sq) / total
-    return int(min(np.searchsorted(cumulative, energy - 1e-12) + 1, sq.size))
+    return int(min(np.searchsorted(cumulative, energy - ENERGY_TOLERANCE) + 1, sq.size))
 
 
 def decompose(img, method="exact", rank=None, seed=0):
@@ -149,7 +151,10 @@ def compress(img, k=None, energy=None, method="exact", rank_budget=None, seed=0)
 
     Exactly one of ``k`` and ``energy`` must be given. For the randomized
     method the SVD is computed up to ``rank_budget`` triplets (default
-    ``k``, or ``min(m, n, 200)`` for an energy target).
+    ``k``, or ``min(m, n, 200)`` for an energy target). An explicit randomized
+    budget must be an integer in ``1..min(m, n)``. Energy requests raise
+    ``ValueError`` if the computed spectrum cannot meet the target within
+    an absolute tolerance of ``1e-12`` (before image rounding/clipping).
     """
     if (k is None) == (energy is None):
         raise ValueError("give exactly one of k or energy")
@@ -158,9 +163,23 @@ def compress(img, k=None, energy=None, method="exact", rank_budget=None, seed=0)
         raise ValueError("k must be >= 1")
     if method == "randomized" and rank_budget is None:
         rank_budget = min(k if k is not None else 200, *img.shape[:2])
+    if method == "randomized":
+        max_rank = min(img.shape[:2])
+        if (isinstance(rank_budget, (bool, np.bool_))
+                or not isinstance(rank_budget, Integral)
+                or not 1 <= rank_budget <= max_rank):
+            raise ValueError(f"rank_budget must be an integer in [1, {max_rank}], got {rank_budget}")
     factors = decompose(img, method, rank=rank_budget, seed=seed)
     if energy is not None:
         k = rank_for_energy(factors.s, energy, factors.energy_total)
+        attainable = (float(np.sum(factors.s ** 2)) / factors.energy_total
+                      if factors.energy_total else 1.0)
+        if attainable < energy - ENERGY_TOLERANCE:
+            raise ValueError(
+                f"requested energy {energy:g} cannot be met with {method} SVD "
+                f"rank budget {factors.max_rank}; attainable energy {attainable:.12g}. "
+                "Increase rank_budget or use method='exact'."
+            )
     return result_for_rank(img, factors, k)
 
 

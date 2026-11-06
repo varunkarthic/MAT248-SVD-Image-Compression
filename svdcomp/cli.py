@@ -30,7 +30,7 @@ def cmd_compress(args):
         result = compress_blocks(img, block=args.blocks, energy=args.energy or 0.95)
     else:
         result = compress(img, k=args.k, energy=None if args.k else (args.energy or 0.95),
-                          method=args.method, seed=args.seed)
+                          method=args.method, rank_budget=args.rank_budget, seed=args.seed)
     elapsed = time.perf_counter() - start
     write_image(args.output, result.image)
     print(_summary(result))
@@ -95,6 +95,8 @@ def build_parser():
     group.add_argument("-k", type=int, help="number of singular values to keep")
     group.add_argument("--blocks", type=int, metavar="SIZE", help="adaptive block-wise SVD with SIZE x SIZE tiles")
     p.add_argument("--energy", type=float, help="keep this fraction of spectral energy (default 0.95)")
+    p.add_argument("--rank-budget", type=int, metavar="R",
+                   help="randomized triplets: 1..min(height, width); default k or min(200, height, width)")
     p.set_defaults(func=cmd_compress)
 
     p = sub.add_parser("info", help="singular value summary and ranks for energy levels")
