@@ -118,3 +118,54 @@ def test_cli_end_to_end(tmp_path, capsys):
     assert (tmp_path / "b.csv").read_text().startswith("k,stored_values")
     assert main(["compress", str(tmp_path / "missing.png"), str(out), "-k", "1"]) == 1
     assert "error" in capsys.readouterr().err
+
+
+def test_randomized_energy_default_budget_regression():
+    img = np.eye(300, dtype=np.uint8) * 255
+    with pytest.raises(ValueError, match=r"0.95.*200.*0.666"):
+        compress(img, energy=0.95, method="randomized", seed=0)
+
+
+def test_randomized_energy_sufficient_budget():
+    img = np.eye(300, dtype=np.uint8) * 255
+    result = compress(img, energy=0.95, method="randomized", rank_budget=300)
+    assert result.k == 285
+    assert result.metrics["energy"] >= 0.95 - 1e-12
+
+
+@pytest.mark.parametrize("budget", [0, -1, 49, 1.5, True])
+def test_randomized_invalid_rank_budget(budget):
+    with pytest.raises(ValueError, match="rank_budget"):
+        compress(SMOOTH, energy=0.9, method="randomized", rank_budget=budget)
+
+
+@pytest.mark.parametrize("channels", [None, 3, 4])
+def test_randomized_energy_success_and_zero(channels):
+    shape = (12, 16) if channels is None else (12, 16, channels)
+    img = np.full(shape, 80, dtype=np.uint8)
+    result = compress(img, energy=1.0, method="randomized", rank_budget=1)
+    assert result.metrics["energy"] >= 1.0 - 1e-12
+    zero = compress(np.zeros(shape, dtype=np.uint8), energy=1.0, method="randomized")
+    assert zero.metrics["energy"] == 1.0
+
+
+@pytest.mark.parametrize("budget", ["0", "-1", "13", "2", "12"])
+def test_cli_randomized_rank_budget(tmp_path, capsys, budget):
+    img = np.eye(12, dtype=np.uint8) * 255
+    src, out = tmp_path / "in.png", tmp_path / "out.png"
+    write_image(src, img)
+    code = main(["compress", str(src), str(out), "--method", "randomized",
+                 "--energy", "0.95", "--rank-budget", budget])
+    captured = capsys.readouterr()
+    if budget == "12":
+        assert code == 0 and out.exists()
+        assert "100.000 %" in captured.out
+    else:
+        assert code == 1 and not out.exists()
+        assert "svdcomp: error:" in captured.err
+        assert "rank_budget" in captured.err or "rank budget 2" in captured.err
+
+
+def test_fixed_rank_randomized_budget_preserved():
+    result = compress(SMOOTH, k=3, method="randomized", rank_budget=5)
+    assert result.k == 3

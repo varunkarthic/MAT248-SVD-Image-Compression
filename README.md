@@ -148,6 +148,18 @@ rel. error    : 0.0112
 time          : 0.26 s
 ```
 
+For randomized energy targets, use `--rank-budget R` (Python: `rank_budget=R`)
+to control the computed triplets, with integer `R` in `1..min(height, width)`.
+The default is `min(200, height, width)` for energy targets, or the requested
+rank capped to the image dimensions for fixed-rank compression. A successful
+energy request retains at least the target minus an absolute `1e-12` tolerance
+in spectral energy, before pixel rounding/clipping. If the computed spectrum
+is insufficient, compression raises `ValueError`; the CLI prints the target,
+budget and attainable energy, exits with status 1, and does not write output.
+Increase the budget or use exact SVD; the budget is never expanded automatically.
+Example (both dimensions at least 300):
+`svdcomp compress photo.png out.png --method randomized --energy 0.95 --rank-budget 300`.
+
 | Command | Key options | Output |
 | --- | --- | --- |
 | `svdcomp compress IN OUT` | `-k K` · `--energy E` · `--blocks SIZE` · `--method exact\|randomized` | Image plus quality summary |

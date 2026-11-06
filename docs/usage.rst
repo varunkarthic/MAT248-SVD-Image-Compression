@@ -181,3 +181,19 @@ Web JSON API
 
    Decomposed images are cached in process memory (an LRU of 8 entries).
    Serve the app with a **single worker process**. Threads are fine.
+
+Randomized energy targets
+-------------------------
+
+``svdcomp compress IN OUT --method randomized --energy 0.95 --rank-budget 300``
+sets the computed triplet budget (Python API: ``rank_budget=300``). The explicit
+budget must be an integer in ``1..min(height, width)``. Its default is
+``min(200, height, width)`` for energy targets, or the requested fixed rank
+capped to the image dimensions.
+
+Successful energy requests retain at least the requested spectral fraction
+minus an absolute tolerance of ``1e-12``, before pixel rounding and clipping.
+If the computed spectrum is insufficient, ``compress`` raises ``ValueError``
+naming the target, budget and attainable energy. The CLI reports the error,
+returns status 1 and writes no output. Increase the budget or use exact SVD;
+there is no automatic budget expansion. Fixed-rank compression is unchanged.
