@@ -169,3 +169,53 @@ def test_cli_randomized_rank_budget(tmp_path, capsys, budget):
 def test_fixed_rank_randomized_budget_preserved():
     result = compress(SMOOTH, k=3, method="randomized", rank_budget=5)
     assert result.k == 3
+
+
+def _tied_tile():
+    img = np.zeros((4, 4), dtype=np.uint8)
+    img[np.arange(4), [0, 2, 3, 1]] = 255
+    return img
+
+
+def test_blocks_tied_energy_regression():
+    result = compress_blocks(_tied_tile(), block=4, energy=0.5)
+    np.testing.assert_array_equal(result.k, [[2]])
+    assert result.metrics["detail_energy"] >= 0.5
+    assert result.stored_values == 19
+
+
+def test_blocks_multitile_ties_deterministic_prefix():
+    img = np.tile(_tied_tile(), (2, 2))
+    for _ in range(2):
+        result = compress_blocks(img, block=4, energy=0.5)
+        np.testing.assert_array_equal(result.k, [[2, 2], [1, 1]])
+        assert result.k.sum() == 6
+        assert result.metrics["detail_energy"] >= 0.5 - 1e-12
+        assert result.stored_values == 4 + 6 * 9
+
+
+@pytest.mark.parametrize("channels", [None, 3, 4])
+@pytest.mark.parametrize("energy", [0.5, 1.0])
+def test_blocks_ties_ragged_color_and_storage(channels, energy):
+    gray = np.pad(np.tile(_tied_tile(), (2, 2)), ((0, 1), (0, 2)))
+    img = gray if channels is None else np.repeat(gray[:, :, None], channels, axis=2)
+    result = compress_blocks(img, block=4, energy=energy)
+    assert result.metrics["detail_energy"] >= energy - 1e-12
+    assert np.all(result.k[2, :] == 0) and np.all(result.k[:, 2] == 0)
+    count = 1 if channels is None else channels
+    expected = sum(count * (1 + int(result.k[i, j]) * (min(4, 9 - i * 4) + min(4, 10 - j * 4) + 1))
+                   for i in range(3) for j in range(3))
+    assert result.stored_values == expected
+    if energy == 1.0:
+        np.testing.assert_array_equal(result.image, img)
+
+
+@pytest.mark.parametrize("channels", [None, 3, 4])
+def test_blocks_zero_detail_tiles(channels):
+    shape = (5, 7) if channels is None else (5, 7, channels)
+    img = np.full(shape, 80, dtype=np.uint8)
+    result = compress_blocks(img, block=4, energy=1.0)
+    assert not result.k.any()
+    assert result.metrics["detail_energy"] == 1.0
+    assert result.stored_values == 4 * (1 if channels is None else channels)
+    np.testing.assert_array_equal(result.image, img)

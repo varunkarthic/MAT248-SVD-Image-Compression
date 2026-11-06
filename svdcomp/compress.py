@@ -198,6 +198,9 @@ def compress_blocks(img, block=32, energy=0.95):
        and keep the largest until ``energy`` of the total *detail* energy
        ``sum_t ||T_t - mean_t||_F^2`` is retained. Within a tile the kept values
        are always a prefix, so tile ``t`` gets rank ``k_t`` (possibly 0).
+       Select individual positive components, breaking equal-energy ties by
+       component rank, then tile row and column; stop at the smallest count
+       meeting the target within an absolute energy-fraction tolerance of 1e-12.
 
     Storage per tile is ``C * (1 + k_t (b_h + b_w + 1))``.
     """
@@ -221,19 +224,27 @@ def compress_blocks(img, block=32, energy=0.95):
         U, s, Vt = jacobi_svd(batch - means)
         decomposed.append(((bh, bw), tiles, means, U, s, Vt, (s ** 2).sum(axis=1)))  # energy per index
 
-    pooled = np.sort(np.concatenate([e.ravel() for *_, e in decomposed]))[::-1]
-    detail = pooled.sum()
+    # Keep component identities: an energy threshold would include every tie.
+    # Rank precedes tile position for ties, preserving each tile's prefix.
+    candidates = []
+    for _, tiles, _, _, _, _, e in decomposed:
+        for (i, j, *_), energies in zip(tiles, e):
+            candidates.extend((-float(value), rank, i, j)
+                              for rank, value in enumerate(energies) if value > 0)
+    candidates.sort()
+    pooled = np.array([-candidate[0] for candidate in candidates])
+    detail = float(pooled.sum())
+    ranks = np.zeros((len(row_tiles), len(col_tiles)), dtype=int)
     if detail > 0:
-        cut = np.searchsorted(np.cumsum(pooled) / detail, energy - 1e-12)
-        threshold = pooled[min(cut, pooled.size - 1)]
-    else:
-        threshold = np.inf
+        count = min(int(np.searchsorted(np.cumsum(pooled) / detail, energy - 1e-12)) + 1,
+                    len(candidates))
+        for _, rank, i, j in candidates[:count]:
+            ranks[i, j] = rank + 1
 
     out = np.empty_like(A)
-    ranks = np.zeros((len(row_tiles), len(col_tiles)), dtype=int)
     stored, kept = 0, 0.0
     for (bh, bw), tiles, means, U, s, Vt, e in decomposed:
-        ks = np.where(e > 0, e >= threshold, False).sum(axis=1)
+        ks = np.array([ranks[i, j] for i, j, *_ in tiles])
         keep = (np.arange(s.shape[-1]) < ks[:, None, None]) * s  # zero the dropped sigmas
         approx = (U * keep[:, :, None, :]) @ Vt + means
         for (i, j, r0, r1, c0, c1), tile, k in zip(tiles, approx, ks):

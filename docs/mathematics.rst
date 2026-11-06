@@ -562,28 +562,29 @@ PatchSVD (Golpayegani & Bouguila, 2024), allocates rank where it is needed.
    and decompose :math:`\tilde T_t = T_t - \mu_t\mathbf{1}\mathbf{1}^T`.
    Without this step the mean would dominate :math:`\sigma_1` in every tile.
 3. **Global rank allocation.** Let :math:`e_{t,i} = \sum_c \sigma_{t,i}^{(c)2}`
-   be the energy of layer :math:`i` in tile :math:`t`. Pool all
-   :math:`e_{t,i}`, sort them in decreasing order, and find the smallest
-   threshold :math:`\theta` such that
+   be the energy of layer :math:`i` in tile :math:`t`. Pool the positive
+   components with their identities and sort by decreasing energy. Break
+   equal-energy ties by component rank, then tile row and column. Keep the
+   smallest number :math:`L` of components such that
 
    .. math::
 
-      \sum_{e_{t,i}\ge\theta} e_{t,i} \;\ge\; \tau \sum_{t,i} e_{t,i} .
+      \sum_{\ell=1}^{L} e_{(\ell)} \;\ge\; \tau \sum_{t,i} e_{t,i} .
 
-   Tile :math:`t` keeps :math:`k_t = |\{i : e_{t,i}\ge\theta\}|` layers. A
-   flat tile has :math:`k_t = 0` and costs a single number.
+   The energy fraction uses an absolute numerical tolerance of ``1e-12``.
+   Tile :math:`t` keeps the number of its selected layers, :math:`k_t`. A
+   flat tile has :math:`k_t = 0` and costs one mean per channel. Components
+   tied at the boundary are selected individually, avoiding unnecessary layers.
 
-**Why the threshold is optimal.** Within each tile the
-:math:`e_{t,1}\ge e_{t,2}\ge\dots` are non-increasing, so by Eckart–Young the
-best use of :math:`k_t` layers in tile :math:`t` is its first :math:`k_t`
-layers. The retained energy is
-:math:`\sum_t\sum_{i\le k_t} e_{t,i}`. Among all allocations with the same
-total number of layers :math:`L=\sum_t k_t`, this sum is maximised by taking
-the :math:`L` largest :math:`e_{t,i}` overall. The set
-:math:`\{e_{t,i}\ge\theta\}` is exactly that, and it is automatically a prefix
-in every tile. When all tiles have the same size, every layer costs the same
-:math:`C(2b+1)` numbers, so the threshold rule is the optimal "water-filling"
-allocation for a storage budget.
+**Why component selection is optimal.** Within each tile the
+:math:`e_{t,1}\ge e_{t,2}\ge\dots` are non-increasing, so by Eckart--Young the
+best use of :math:`k_t` layers is its first :math:`k_t` layers. Sorting by
+energy and breaking ties by rank preserves this prefix. Among allocations
+with :math:`L=\sum_t k_t` layers, taking the :math:`L` largest components
+maximises retained energy, so the first prefix meeting the target uses the
+fewest layers. When all tiles have the same size, each layer costs the same
+:math:`C(2b+1)` numbers, and this also minimises storage. Ragged edge tiles
+have different layer costs; the guarantee there is minimum component count.
 
 Storage is
 
