@@ -211,11 +211,77 @@ def test_blocks_ties_ragged_color_and_storage(channels, energy):
 
 
 @pytest.mark.parametrize("channels", [None, 3, 4])
-def test_blocks_zero_detail_tiles(channels):
+@pytest.mark.parametrize("energy", [1e-15, 1e-12, np.nextafter(1e-12, np.inf), 1.0])
+def test_blocks_zero_detail_tiles(channels, energy):
     shape = (5, 7) if channels is None else (5, 7, channels)
     img = np.full(shape, 80, dtype=np.uint8)
-    result = compress_blocks(img, block=4, energy=1.0)
+    result = compress_blocks(img, block=4, energy=energy)
     assert not result.k.any()
     assert result.metrics["detail_energy"] == 1.0
     assert result.stored_values == 4 * (1 if channels is None else channels)
     np.testing.assert_array_equal(result.image, img)
+
+
+@pytest.mark.parametrize("channels", [None, 3, 4])
+@pytest.mark.parametrize("seed", [0, 2, 7])
+@pytest.mark.parametrize("method", ["exact", "randomized"])
+def test_energy_boundary_uses_reported_energy_and_minimum_rank(channels, seed, method):
+    shape = (12, 17) if channels is None else (12, 17, channels)
+    img = np.random.default_rng(0).integers(0, 256, shape, dtype=np.uint8)
+    f = decompose(img, method=method, rank=12, seed=seed)
+    reported = [float(np.sum(f.s[:, :k] ** 2)) / f.energy_total
+                for k in range(1, 13)]
+    cumulative = np.cumsum(np.sum(f.s ** 2, axis=0)) / f.energy_total
+    for fraction in cumulative[:-1]:
+        target = float(fraction + 1e-12)
+        result = compress(img, energy=target, method=method, rank_budget=12, seed=seed)
+        expected = next(k for k, value in enumerate(reported, 1) if value >= target - 1e-12)
+        assert result.metrics["energy"] >= target - 1e-12
+        assert result.k == expected
+        assert result.metrics["energy"] == reported[expected - 1]
+
+
+@pytest.mark.parametrize("seed", [0, 2, 7])
+def test_energy_boundary_budget_exhaustion(seed):
+    img = np.random.default_rng(0).integers(0, 256, (12, 17, 3), dtype=np.uint8)
+    f = decompose(img, method="randomized", rank=8, seed=seed)
+    attainable = float(np.sum(f.s ** 2)) / f.energy_total
+    target = float(np.nextafter(attainable + 1e-12, np.inf))
+    assert target - 1e-12 > attainable
+    with pytest.raises(ValueError, match="rank budget 8; attainable energy"):
+        compress(img, energy=target, method="randomized", rank_budget=8, seed=seed)
+    fixed = compress(img, k=3, method="randomized", rank_budget=8, seed=seed)
+    expected = result_for_rank(img, f, 3)
+    assert fixed.k == expected.k
+    assert fixed.metrics == expected.metrics
+    np.testing.assert_array_equal(fixed.image, expected.image)
+
+
+@pytest.mark.parametrize("energy", [1e-15, np.nextafter(1e-12, 0), 1e-12,
+                                    np.nextafter(1e-12, np.inf)])
+@pytest.mark.parametrize("channels", [None, 3, 4])
+@pytest.mark.parametrize("ragged", [False, True])
+def test_blocks_tolerance_includes_empty_selection(energy, channels, ragged):
+    gray = np.tile(_tied_tile(), (2, 2))
+    if ragged:
+        gray = np.pad(gray, ((0, 1), (0, 2)))
+    img = gray if channels is None else np.repeat(gray[:, :, None], channels, axis=2)
+    result = compress_blocks(img, block=4, energy=energy)
+    expected = np.zeros(result.k.shape, dtype=int)
+    if energy > 1e-12:
+        expected[0, 0] = 1
+    np.testing.assert_array_equal(result.k, expected)
+    assert result.metrics["detail_energy"] >= energy - 1e-12
+    if energy <= 1e-12:
+        assert result.metrics["detail_energy"] == 0.0
+    count = 1 if channels is None else channels
+    assert result.stored_values == count * (expected.size + 9 * int(expected.sum()))
+    repeated = compress_blocks(img, block=4, energy=energy)
+    np.testing.assert_array_equal(repeated.k, expected)
+
+
+def test_blocks_tiny_target_original_fixture():
+    result = compress_blocks(_tied_tile(), block=4, energy=1e-15)
+    assert result.k.tolist() == [[0]]
+    assert result.stored_values == 1
+    assert result.metrics["detail_energy"] == 0.0

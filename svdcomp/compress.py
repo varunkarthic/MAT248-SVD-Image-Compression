@@ -134,6 +134,12 @@ def evaluate(original, approx):
     }
 
 
+def _retained_energy(factors, k):
+    """Spectral fraction, using the same reduction for selection and reporting."""
+    kept = float(np.sum(factors.s[:, :k] ** 2))
+    return kept / factors.energy_total if factors.energy_total else 1.0
+
+
 def result_for_rank(img, factors, k):
     """Build a :class:`CompressionResult` for rank ``k`` from precomputed factors."""
     img = as_uint8_image(img)
@@ -141,8 +147,7 @@ def result_for_rank(img, factors, k):
     out = reconstruct(factors, k)
     m, n = factors.shape
     stats = evaluate(img, out)
-    kept = float(np.sum(factors.s[:, :k] ** 2))
-    stats["energy"] = kept / factors.energy_total if factors.energy_total else 1.0
+    stats["energy"] = _retained_energy(factors, k)
     return CompressionResult(out, k, storage_cost(m, n, k, factors.channels), img.size, stats)
 
 
@@ -172,9 +177,15 @@ def compress(img, k=None, energy=None, method="exact", rank_budget=None, seed=0)
     factors = decompose(img, method, rank=rank_budget, seed=seed)
     if energy is not None:
         k = rank_for_energy(factors.s, energy, factors.energy_total)
-        attainable = (float(np.sum(factors.s ** 2)) / factors.energy_total
-                      if factors.energy_total else 1.0)
-        if attainable < energy - ENERGY_TOLERANCE:
+        target = energy - ENERGY_TOLERANCE
+        # The cumulative estimate can round differently from the reported sum.
+        # Correct in both directions to retain the smallest qualifying rank.
+        while k > 1 and _retained_energy(factors, k - 1) >= target:
+            k -= 1
+        while k < factors.max_rank and _retained_energy(factors, k) < target:
+            k += 1
+        attainable = _retained_energy(factors, k)
+        if attainable < target:
             raise ValueError(
                 f"requested energy {energy:g} cannot be met with {method} SVD "
                 f"rank budget {factors.max_rank}; attainable energy {attainable:.12g}. "
@@ -201,6 +212,7 @@ def compress_blocks(img, block=32, energy=0.95):
        Select individual positive components, breaking equal-energy ties by
        component rank, then tile row and column; stop at the smallest count
        meeting the target within an absolute energy-fraction tolerance of 1e-12.
+       Targets at or below that tolerance need no detail components.
 
     Storage per tile is ``C * (1 + k_t (b_h + b_w + 1))``.
     """
@@ -235,8 +247,8 @@ def compress_blocks(img, block=32, energy=0.95):
     pooled = np.array([-candidate[0] for candidate in candidates])
     detail = float(pooled.sum())
     ranks = np.zeros((len(row_tiles), len(col_tiles)), dtype=int)
-    if detail > 0:
-        count = min(int(np.searchsorted(np.cumsum(pooled) / detail, energy - 1e-12)) + 1,
+    if detail > 0 and energy > ENERGY_TOLERANCE:
+        count = min(int(np.searchsorted(np.cumsum(pooled) / detail, energy - ENERGY_TOLERANCE)) + 1,
                     len(candidates))
         for _, rank, i, j in candidates[:count]:
             ranks[i, j] = rank + 1
