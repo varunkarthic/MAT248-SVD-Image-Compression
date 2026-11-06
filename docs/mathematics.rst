@@ -572,6 +572,8 @@ PatchSVD (Golpayegani & Bouguila, 2024), allocates rank where it is needed.
       \sum_{\ell=1}^{L} e_{(\ell)} \;\ge\; \tau \sum_{t,i} e_{t,i} .
 
    The energy fraction uses an absolute numerical tolerance of ``1e-12``.
+   Targets at or below this tolerance retain zero detail components, storing
+   only each tile's per-channel mean.
    Tile :math:`t` keeps the number of its selected layers, :math:`k_t`. A
    flat tile has :math:`k_t = 0` and costs one mean per channel. Components
    tied at the boundary are selected individually, avoiding unnecessary layers.

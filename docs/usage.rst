@@ -193,6 +193,9 @@ capped to the image dimensions.
 
 Successful energy requests retain at least the requested spectral fraction
 minus an absolute tolerance of ``1e-12``, before pixel rounding and clipping.
+The selected global rank is verified using the same spectral-energy sum as
+reported in the result; rounding at a rank boundary may require another triplet
+within the existing budget.
 If the computed spectrum is insufficient, ``compress`` raises ``ValueError``
 naming the target, budget and attainable energy. The CLI reports the error,
 returns status 1 and writes no output. Increase the budget or use exact SVD;
