@@ -418,7 +418,7 @@ export function init() {
 
   /* ---------- playback ---------- */
   const dwell = () => {
-    const ms = 800 / (+speedSel.value || 1);
+    const ms = 2000 / (+speedSel.value || 1);
     return reducedMotion() ? Math.max(1200, ms) : ms;
   };
   function pause(say = true) {
@@ -452,7 +452,7 @@ export function init() {
     try {
       if (!introSkipped && !introDone) {
         introBox.hidden = false;
-        const d = reducedMotion() ? 2400 : Math.max(900, 1800 / (+speedSel.value || 1));
+        const d = reducedMotion() ? 2400 : Math.max(1500, 3000 / (+speedSel.value || 1));
         for (const li of introItems) {
           introItems.forEach((x) => x.classList.toggle("is-current", x === li));
           await wait(d, ctl.signal);

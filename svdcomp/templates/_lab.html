@@ -23,8 +23,6 @@
           <p class="lab-busy" id="lab-busy" role="status" aria-live="polite" data-testid="lab-busy"></p>
         </div>
         <div class="lab-error" id="lab-error" role="alert" data-testid="lab-error" hidden></div>
-        <dl class="lab-meta" id="image-meta" data-testid="image-meta" hidden></dl>
-        <p class="lab-meta-notes" id="image-notes" data-testid="image-notes" hidden></p>
       </div>
       <div class="lab-gallery-col">
         <h3 class="lab-step"><span class="lab-step-no">B</span> Or start from a sample</h3>
@@ -39,6 +37,35 @@
       <div class="lab-tabs" role="tablist" aria-label="Compression method">
         <button role="tab" id="tab-global" data-testid="tab-global" aria-selected="true" aria-controls="panel-global" type="button">Global SVD</button>
         <button role="tab" id="tab-blocks" data-testid="tab-blocks" aria-selected="false" aria-controls="panel-blocks" tabindex="-1" type="button">Adaptive blocks</button>
+      </div>
+
+      <div class="lab-summary">
+        <div class="lab-summary-file">
+          <h3 class="lab-step">Your image</h3>
+        <dl class="lab-meta" id="image-meta" data-testid="image-meta" hidden></dl>
+        <p class="lab-meta-notes" id="image-notes" data-testid="image-notes" hidden></p>
+        </div>
+        <div class="lab-results" id="results" data-testid="results">
+          <h3 class="lab-step"><span class="lab-step-no">D</span> Image and result summary</h3>
+          <dl class="lab-dl">
+            <div><dt>Rank <i>k</i></dt><dd id="r-k" data-testid="r-k">–</dd></div>
+            <div><dt>Image size</dt><dd id="r-dim" data-testid="r-dim">–</dd></div>
+            <div><dt>Retained energy E(k)</dt><dd id="r-energy" data-testid="r-energy">–</dd></div>
+            <div><dt>Frobenius error after 8-bit rounding</dt><dd id="r-frob" data-testid="r-frob">–</dd></div>
+            <div><dt>Spectral error ‖A − A<sub>k</sub>‖<sub>F</sub> <span class="muted" id="r-spec-kind"></span></dt><dd id="r-spectral" data-testid="r-spectral">–</dd></div>
+            <div><dt>Relative error</dt><dd id="r-rel" data-testid="r-rel">–</dd></div>
+            <div><dt>MSE</dt><dd id="r-mse" data-testid="r-mse">–</dd></div>
+            <div><dt>PSNR</dt><dd id="r-psnr" data-testid="r-psnr">–</dd></div>
+            <div><dt>SSIM</dt><dd id="r-ssim" data-testid="r-ssim">–</dd></div>
+            <div><dt>Stored scalars k(m+n+1)·channels</dt><dd id="r-stored" data-testid="r-stored">–</dd></div>
+            <div><dt>Scalar-count ratio <span class="muted">(NOT a file-size reduction)</span></dt><dd id="r-ratio" data-testid="r-ratio">–</dd></div>
+            <div><dt>Your uploaded file</dt><dd id="r-source" data-testid="r-source">–</dd></div>
+            <div><dt>Reconstruction as PNG <span class="muted">(not an SVD file)</span></dt><dd id="r-png" data-testid="r-png">–</dd></div>
+          </dl>
+          <p class="note secondary">The scalar count k(m+n+1) is a mathematical count of numbers to store, not a file size. Plain SVD factors
+            kept as 64-bit floats can take more space than the original image, and JPEG or WebP normally compress better than a simple
+            truncated SVD. The spectral error is exact mathematics before rounding; the pixel error is measured after rounding and clipping to 8-bit values.</p>
+        </div>
       </div>
 
       <div class="lab-grid">
@@ -213,27 +240,6 @@
           <figure class="lab-chart lab-chart--wide"><div id="chart-storage" data-testid="chart-storage"></div></figure>
         </div>
 
-        <div class="lab-results" id="results" data-testid="results">
-          <h3 class="lab-step"><span class="lab-step-no">F</span> Results at the displayed rank</h3>
-          <dl class="lab-dl">
-            <div><dt>Rank <i>k</i></dt><dd id="r-k" data-testid="r-k">–</dd></div>
-            <div><dt>Image size</dt><dd id="r-dim" data-testid="r-dim">–</dd></div>
-            <div><dt>Retained energy E(k)</dt><dd id="r-energy" data-testid="r-energy">–</dd></div>
-            <div><dt>Frobenius error after 8-bit rounding</dt><dd id="r-frob" data-testid="r-frob">–</dd></div>
-            <div><dt>Spectral error ‖A − A<sub>k</sub>‖<sub>F</sub> <span class="muted" id="r-spec-kind"></span></dt><dd id="r-spectral" data-testid="r-spectral">–</dd></div>
-            <div><dt>Relative error</dt><dd id="r-rel" data-testid="r-rel">–</dd></div>
-            <div><dt>MSE</dt><dd id="r-mse" data-testid="r-mse">–</dd></div>
-            <div><dt>PSNR</dt><dd id="r-psnr" data-testid="r-psnr">–</dd></div>
-            <div><dt>SSIM</dt><dd id="r-ssim" data-testid="r-ssim">–</dd></div>
-            <div><dt>Stored scalars k(m+n+1)·channels</dt><dd id="r-stored" data-testid="r-stored">–</dd></div>
-            <div><dt>Scalar-count ratio <span class="muted">(NOT a file-size reduction)</span></dt><dd id="r-ratio" data-testid="r-ratio">–</dd></div>
-            <div><dt>Your uploaded file</dt><dd id="r-source" data-testid="r-source">–</dd></div>
-            <div><dt>Reconstruction as PNG <span class="muted">(not an SVD file)</span></dt><dd id="r-png" data-testid="r-png">–</dd></div>
-          </dl>
-          <p class="note secondary">The scalar count k(m+n+1) is a mathematical count of numbers to store, not a file size. Plain SVD factors
-            kept as 64-bit floats can take more space than the original image, and JPEG or WebP normally compress better than a simple
-            truncated SVD. The spectral error is exact mathematics before rounding; the pixel error is measured after rounding and clipping to 8-bit values.</p>
-        </div>
       </div>
     </div>
   </div>
