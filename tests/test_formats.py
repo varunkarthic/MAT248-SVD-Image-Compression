@@ -1,10 +1,10 @@
-import struct
+﻿import struct
 import zlib
 
 import numpy as np
 import pytest
 
-from svdcomp.formats import (PNG_SIGNATURE, _paeth, _png_chunk, decode_image, decode_png,
+from svdcomp.formats import (PNG_SIGNATURE, _paeth, _png_chunk, decode_image, decode_png, decode_pnm,
                              encode_bmp, encode_png, encode_pnm, read_image, write_image)
 
 rng = np.random.default_rng(42)
@@ -136,3 +136,27 @@ def test_dispatch_and_files(tmp_path):
 def test_float_input_is_rounded_and_clipped():
     out = decode_png(encode_png(np.array([[-3.0, 12.4], [12.6, 300.0]])))
     np.testing.assert_array_equal(out, [[0, 12], [13, 255]])
+
+
+def test_pnm_binary_crlf_header_keeps_first_sample():
+    np.testing.assert_array_equal(decode_pnm(b"P5\r\n1 1\r\n255\r\n\x80"), [[128]])
+    rgb = decode_pnm(b"P6\r\n1 1\r\n255\r\n\x0a\x0d\x0a")
+    np.testing.assert_array_equal(rgb, [[[10, 13, 10]]])
+
+
+def test_pnm_lf_header_with_leading_lf_sample_unchanged():
+    np.testing.assert_array_equal(decode_pnm(b"P5\n1 1\n255\n\n"), [[10]])
+
+
+def test_pnm_16_bit_binary_crlf():
+    out = decode_pnm(b"P5\r\n2 1\r\n65535\r\n\x00\x00\xff\xff")
+    np.testing.assert_array_equal(out, [[0, 255]])
+    out = decode_pnm(b"P5\n1 1\n1000\n\x03\xe8")
+    np.testing.assert_array_equal(out, [[255]])
+
+
+@pytest.mark.parametrize("data", [b"P2 1 1 255 -1", b"P3 1 1 255 0 -5 0", b"P2 1 1 255 256", b"P2 1 1 255 x",
+                                  b"P5\n2 1\n255\n\x01"])
+def test_pnm_rejects_bad_samples(data):
+    with pytest.raises(ValueError):
+        decode_pnm(data)
