@@ -160,3 +160,50 @@ def test_pnm_16_bit_binary_crlf():
 def test_pnm_rejects_bad_samples(data):
     with pytest.raises(ValueError):
         decode_pnm(data)
+
+
+# ------------------------------------------------------------------ #19: bounded PNG decoding
+
+def _png_bytes(width, height, payload, color=0, depth=8):
+    ihdr = struct.pack(">IIBBBBB", width, height, depth, color, 0, 0, 0)
+    return (PNG_SIGNATURE + _png_chunk(b"IHDR", ihdr) + _png_chunk(b"IDAT", zlib.compress(payload))
+            + _png_chunk(b"IEND", b""))
+
+
+def test_png_oversized_header_rejected_before_allocation(monkeypatch):
+    import svdcomp.formats as fmt
+    monkeypatch.setattr(fmt.np, "empty", lambda *a, **k: pytest.fail("allocated scanlines"))
+    monkeypatch.setattr(fmt.zlib, "decompressobj", lambda *a, **k: pytest.fail("decompressed"))
+    with pytest.raises(ValueError, match="limit"):
+        decode_image(_png_bytes(100000, 100000, b"\x00"), max_pixels=4_000_000)
+
+
+def test_png_huge_header_with_tiny_data_is_controlled_error():
+    with pytest.raises(ValueError):
+        decode_image(_png_bytes(50000, 1000, b"\x00" * 10))
+
+
+def test_png_decompression_surplus_rejected():
+    payload = b"\x00" * 3 + b"\x00" * 100_000        # 1 row of 2 pixels expected, far more supplied
+    with pytest.raises(ValueError, match="exceeds"):
+        decode_image(_png_bytes(2, 1, payload))
+
+
+def test_png_decompression_underflow_rejected():
+    with pytest.raises(ValueError, match="too short"):
+        decode_image(_png_bytes(4, 4, b"\x00" * 5))
+
+
+def test_png_pixel_limit_boundary():
+    img = np.zeros((4, 5), dtype=np.uint8)
+    np.testing.assert_array_equal(decode_image(encode_png(img), max_pixels=20), img)
+    with pytest.raises(ValueError, match="limit"):
+        decode_image(encode_png(img), max_pixels=19)
+
+
+def test_pnm_and_bmp_limits():
+    img = np.zeros((4, 5), dtype=np.uint8)
+    for blob in (encode_pnm(img), encode_bmp(img)):
+        assert decode_image(blob, max_pixels=20).shape == (4, 5)
+        with pytest.raises(ValueError, match="limit"):
+            decode_image(blob, max_pixels=19)

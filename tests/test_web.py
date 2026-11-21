@@ -1,11 +1,13 @@
-import base64
+﻿import base64
 import io
+import struct
+import zlib
 
 import numpy as np
 import pytest
 
 from svdcomp import web
-from svdcomp.formats import decode_png, encode_bmp, encode_png
+from svdcomp.formats import PNG_SIGNATURE, _png_chunk, decode_png, encode_bmp, encode_png
 
 rng = np.random.default_rng(3)
 IMG = rng.integers(0, 256, (24, 32, 3), dtype=np.uint8)
@@ -87,3 +89,19 @@ def test_cache_evicts_oldest(client):
     upload(client)
     upload(client)
     assert client.post("/api/decompose", data={"token": first}).status_code == 404
+
+
+def test_oversized_png_header_is_json_error_not_allocation(client):
+    ihdr = struct.pack(">IIBBBBB", 100000, 100000, 8, 0, 0, 0, 0)
+    blob = (PNG_SIGNATURE + _png_chunk(b"IHDR", ihdr) + _png_chunk(b"IDAT", zlib.compress(b"\x00"))
+            + _png_chunk(b"IEND", b""))
+    res = upload(client, blob)
+    assert res.status_code == 400 and "limit" in res.get_json()["error"]
+    assert client.get("/").status_code == 200  # server still responsive
+
+
+def test_upload_pixel_boundary(client, monkeypatch):
+    monkeypatch.setattr(web, "MAX_PIXELS", 24 * 32)
+    assert upload(client).status_code == 200
+    monkeypatch.setattr(web, "MAX_PIXELS", 24 * 32 - 1)
+    assert upload(client).status_code == 400
