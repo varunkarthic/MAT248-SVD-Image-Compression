@@ -111,35 +111,23 @@ Full proofs, algorithms and error bounds are in the [mathematics chapter](https:
 </tr>
 </table>
 
-## 🔬 SVD LAB: the interactive laboratory
+## 🔬 SVD LAB: the interactive demo
 
-`svdcomp-web` serves **SVD LAB**, an offline presentation laboratory built on the same from-scratch engine. The browser only draws; every number comes from the package's own SVD.
+`svdcomp-web` serves **SVD LAB**, an offline demo on the same from-scratch engine. The browser only draws; every number comes from the package's own SVD.
 
 <img src="docs/_static/screenshots/04-laboratory.png" alt="The laboratory: gallery, comparison, rank controls, charts and results" width="100%">
 
-| Area | What it does |
-| --- | --- |
-| **Learn** | 15 beginner chapters (pixel → matrix → multiplication → rank → transpose → eigenvalues → SVD → rank-k), each with an example, a speaker script, and (in *Details* mode) precise statements and examiner questions. |
-| **2 × 2 worked example** | A = [[3,1],[1,3]]: σ = 4, 2; A₁ = [[2,2],[2,2]]; ‖A − A₁‖_F = 2; energy 80 %. Step mode, board mode, animated multiplications, and a check against the engine. |
-| **Laboratory** | Upload / drag-and-drop / 9 bundled sample images, exact or randomized SVD, **Build the image one rank at a time** (real rank-k reconstructions, one request in flight, cancellable), draggable before/after divider, rank-one component view, five synchronised charts, honest metrics. |
-| **Adaptive blocks** | Per-tile rank heat-map with legend. |
-| **Presentation mode** | Enlarged layout, fullscreen, 10-step guided demo (PageUp/PageDown). |
-| **Mathematics explorer** | Eckart–Young–Mirsky, energy, storage count k(m+n+1), error and quality metrics, exact vs randomized SVD, limitations. |
+Upload or drag in an image (or pick one of 9 bundled samples), choose exact or randomized SVD, and press **Play** to rebuild the image one real rank-k reconstruction at a time, with a draggable before/after divider, rank-one component view, five synchronised charts, quality metrics and an adaptive-block heat-map.
 
 ```bash
 pip install -e ".[dev]"
-svdcomp-web            # open http://127.0.0.1:5000  (add ?intro=0 to skip the 4-second introduction)
+svdcomp-web            # open http://127.0.0.1:5000  (add ?intro=0 to skip the short intro)
 pytest -q              # backend + browser tests (browser tests skip if Playwright/Chrome are absent)
-pip install -e ".[e2e]" && playwright install chromium   # optional: run the browser tests
 ```
 
-**Honesty notes.** The *scalar-count ratio* k(m+n+1) vs m·n is not a file-size reduction; a reconstruction downloaded as PNG is an image, not an SVD file; plain float64 SVD factors can exceed the image size, and JPEG/WebP usually beat simple SVD. Spectral error (before rounding) and measured pixel error (after 8-bit rounding) are shown separately. The 3D-style scenes are CSS 3D/SVG/Canvas illustrations, not computations. Uploads are content-sniffed, size- and pixel-limited from the header, PNG inflation is bounded, and a strict Content-Security-Policy keeps everything local.
+The mathematics (2 × 2 worked example, Eckart–Young theorem, likely questions) is explained simply in [`documentation/svd-explained.pdf`](documentation/svd-explained.pdf). Assigned reference: <https://arxiv.org/html/2512.16226v1>.
 
-| Presentation mode | Mobile |
-| --- | --- |
-| <img src="docs/_static/screenshots/07-presentation-mode.png" alt="Presentation mode with guided panel"> | <img src="docs/_static/screenshots/08-mobile.png" alt="390 px wide layout" width="240"> |
-
-See [`documentation/presentation-guide.md`](documentation/presentation-guide.md) for the 30–45 minute presentation plan, board work, demo script and examiner Q&A. Assigned reference: <https://arxiv.org/html/2512.16226v1>. Troubleshooting: if the page shows no MathML, use Chrome/Edge ≥ 109; if "unknown or expired image token" appears, the in-memory cache evicted the image (reload it); the server keeps one process, so run a single worker.
+Note: the scalar count k(m+n+1) is not a file size, JPEG/WebP usually beat plain SVD, and randomized SVD is an approximation.
 
 ---
 
