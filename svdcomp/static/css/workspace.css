@@ -197,3 +197,23 @@
 }
 
 #lab [hidden] { display: none !important; }
+
+/* ---------- centred layout: upload in the middle, controls at the side, charts and results below ---------- */
+#lab > .wrap > header { text-align: center; margin-inline: auto; }
+#lab > .wrap > header p { margin-inline: auto; }
+.lab-input, #lab.is-loaded .lab-input { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 2.5rem;
+                                       max-width: 64rem; margin-inline: auto; }
+.lab-drop-col { width: min(100%, 42rem); }
+.lab-drop-col .lab-step, .lab-gallery-col .lab-step { text-align: center; }
+.lab-drop { min-height: 13rem; border-radius: 6px; }
+#lab.is-loaded .lab-drop { min-height: 5rem; }
+.lab-input-row { justify-content: center; }
+.lab-meta { max-width: 26rem; margin-inline: auto; }
+.lab-meta-notes { margin-inline: auto; text-align: center; }
+.lab-gallery-col { width: 100%; }
+.lab-gallery, #lab.is-loaded .lab-gallery { grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); }
+.lab-analysis { margin-top: 3rem; }
+.lab-side { position: sticky; top: 4.5rem; align-self: start; }
+.lab-charts { margin-top: 3rem; }
+@media (max-width: 1000px) { .lab-side { position: static; } }
+.lab-drop-col .lab-step, .lab-gallery-col .lab-step { justify-content: center; }

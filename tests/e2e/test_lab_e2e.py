@@ -254,3 +254,24 @@ def test_acceptance_run_through(session, tmp_path):
     compute_svd(page, "exact")
     assert [e for e in s.errors] == []
     assert s.external == []
+
+
+def test_intro_plays_again_when_an_image_is_loaded(session):
+    s = session(intro=True)
+    page = s.page
+    tid(page, "intro-skip").click()
+    expect(tid(page, "intro-overlay")).to_be_hidden()
+    tid(page, "sample-tiny-face").click()
+    expect(tid(page, "intro-overlay")).to_be_visible()
+    expect(page.locator("#intro-tag")).to_contain_text("Analysing")
+    tid(page, "intro-skip").click()
+    expect(tid(page, "intro-overlay")).to_be_hidden()
+    expect(page.locator("#image-meta")).to_be_visible()
+    assert s.errors == []
+
+
+def test_no_intro_on_load_when_disabled(session):
+    s = session()
+    tid(s.page, "sample-tiny-face").click()
+    expect(s.page.locator("#image-meta")).to_be_visible(timeout=15000)
+    expect(tid(s.page, "intro-overlay")).to_be_hidden()
