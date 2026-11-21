@@ -1,4 +1,4 @@
-"""From-scratch image codecs: PNG, BMP and PNM (PGM/PPM).
+﻿"""From-scratch image codecs: PNG, BMP and PNM (PGM/PPM).
 
 Every decoder returns a ``uint8`` array of shape ``(H, W)`` for grayscale or
 ``(H, W, C)`` with ``C`` in 2 (gray + alpha), 3 (RGB) or 4 (RGBA). DEFLATE
@@ -297,21 +297,32 @@ def decode_pnm(data):
     channels = 3 if magic in (b"P3", b"P6") else 1
     count = width * height * channels
     if magic in (b"P5", b"P6"):
-        dtype = np.uint8 if maxval < 256 else np.dtype(">u2")
-        raster = data[pos + 1:]  # exactly one whitespace byte follows maxval
-        if len(raster) < count * np.dtype(dtype).itemsize:
+        itemsize = 1 if maxval < 256 else 2
+        dtype = np.uint8 if itemsize == 1 else np.dtype(">u2")
+        # Exactly one whitespace byte ends the header. Files written with CRLF line
+        # endings use two bytes, so accept "\r\n" whenever enough raster data follows.
+        if data[pos:pos + 2] == b"\r\n" and len(data) - (pos + 2) >= count * itemsize:
+            pos += 2
+        else:
+            pos += 1
+        raster = data[pos:]
+        if len(raster) < count * itemsize:
             raise ValueError("PNM: pixel data truncated")
         values = np.frombuffer(raster, dtype=dtype, count=count)
     else:
         tokens = re.sub(rb"#[^\n]*", b"", data[pos:]).split()
         if len(tokens) < count:
             raise ValueError("PNM: pixel data truncated")
-        values = np.array(tokens[:count], dtype=np.int64)
+        try:
+            values = np.array([int(token) for token in tokens[:count]], dtype=np.int64)
+        except ValueError:
+            raise ValueError("PNM: sample is not an integer") from None
+        if values.min() < 0:
+            raise ValueError("PNM: negative sample")
     if values.max() > maxval:
         raise ValueError("PNM: sample exceeds maxval")
     pixels = _scale_to_uint8(values, maxval).reshape(height, width, channels)
     return pixels[:, :, 0] if channels == 1 else pixels
-
 
 def encode_pnm(img):
     """Encode as binary PGM (P5) for grayscale or PPM (P6) for RGB."""
