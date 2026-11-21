@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/intro.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/learn.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/scenes.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
 </head>
 <body data-detail="simple">
@@ -53,6 +54,7 @@
   </section>
 
   {% include "_learn.html" %}
+  {% include "_scenes.html" %}
   {% include "_worked.html" %}
   {% include "_lab.html" %}
   {% include "_math.html" %}

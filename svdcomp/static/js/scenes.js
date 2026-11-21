@@ -1,0 +1,2 @@
+/* scenes */
+export function init() {}

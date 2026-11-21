@@ -2,7 +2,7 @@
  * then wires the global toolbar: detail switch, intro replay, presentation mode, section highlighting. */
 import { $, $$, emit, on } from "./core.js";
 
-const MODULES = ["intro", "learn", "worked", "workspace", "finale", "present"];
+const MODULES = ["intro", "learn", "scenes", "worked", "workspace", "finale", "present"];
 const loaded = {};
 
 for (const name of MODULES) {

@@ -126,3 +126,16 @@ body.presenting :focus-visible { outline-width: 4px; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
+
+/* ---------- guided-demo panel (present.js) ---------- */
+.tour { position: fixed; right: 1rem; bottom: 1rem; z-index: 60; width: min(24rem, calc(100% - 2rem)); background: var(--ink); color: var(--paper);
+        padding: 1rem 1.2rem; border-radius: var(--radius); box-shadow: 0 8px 30px rgb(0 0 0 / .25); }
+.tour[hidden] { display: none; }
+.tour__step { margin: 0 0 .3rem; color: #aebfe6; font-size: var(--step--1); }
+.tour__title { font-size: var(--step-1); margin: 0 0 .4rem; color: #fff; }
+.tour__say { font-size: var(--step--1); margin: 0 0 .8rem; color: #e8e4d8; }
+.tour__buttons { display: flex; gap: .5rem; flex-wrap: wrap; }
+.tour .btn { border-color: #e8e4d8; color: #fff; padding: .5rem .7rem; min-height: 2.4rem; }
+.tour .btn:hover:not(:disabled) { background: #fff; color: var(--ink); }
+.tour .btn--primary { background: var(--accent); border-color: var(--accent); }
+body.presenting .tour { font-size: 1rem; }
