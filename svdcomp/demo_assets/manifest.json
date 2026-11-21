@@ -1,0 +1,94 @@
+{
+  "samples": [
+    {
+      "id": "gradient",
+      "title": "Smooth gradient",
+      "file": "gradient.png",
+      "description": "A grayscale ramp that brightens from top-left to bottom-right.",
+      "why": "Every entry is a linear function of (row, column), so the matrix has rank 2: two singular components rebuild it almost exactly.",
+      "height": 256,
+      "width": 256,
+      "channels": 1
+    },
+    {
+      "id": "checkerboard",
+      "title": "Checkerboard",
+      "file": "checkerboard.png",
+      "description": "An 8 x 8 board of black and white squares.",
+      "why": "Repeated structure means low rank: the board is exactly rank 2 (a +/- pattern outer-multiplied by another), despite its hard edges.",
+      "height": 256,
+      "width": 256,
+      "channels": 1
+    },
+    {
+      "id": "shapes",
+      "title": "Geometric shapes",
+      "file": "shapes.png",
+      "description": "A circle, a rectangle and a triangle on a shaded background.",
+      "why": "Axis-aligned blocks are cheap; diagonals and curves need more components, so you can watch the edges sharpen as k grows.",
+      "height": 256,
+      "width": 256,
+      "channels": 1
+    },
+    {
+      "id": "edges",
+      "title": "Edge-heavy pattern",
+      "file": "edges.png",
+      "description": "Diagonal stripes, a grid and concentric rings.",
+      "why": "Diagonal and circular edges are not aligned with rows and columns, so the singular values decay slowly.",
+      "height": 256,
+      "width": 256,
+      "channels": 1
+    },
+    {
+      "id": "low-rank",
+      "title": "Low-rank construction",
+      "file": "low-rank.png",
+      "description": "A 256 x 192 image: four separable cosine patterns plus a constant brightness offset.",
+      "why": "Before 8-bit rounding the rank is exactly 5: the spectrum drops to rounding-noise level after sigma_5, and k = 5 is already nearly perfect.",
+      "height": 256,
+      "width": 192,
+      "channels": 1
+    },
+    {
+      "id": "texture",
+      "title": "Complex texture",
+      "file": "texture.png",
+      "description": "Fractal 1/f noise with detail at every scale.",
+      "why": "Nothing here is low rank. The spectrum decays slowly, which shows where truncated SVD stops being a good compressor.",
+      "height": 256,
+      "width": 256,
+      "channels": 1
+    },
+    {
+      "id": "tiny-face",
+      "title": "Tiny 16 x 16 face",
+      "file": "tiny-face.png",
+      "description": "A 16 x 16 pixel face, small enough to print the whole matrix.",
+      "why": "Small enough for the exact SVD in a blink, and the pixel-to-matrix correspondence can be read entry by entry.",
+      "height": 16,
+      "width": 16,
+      "channels": 1
+    },
+    {
+      "id": "photo-gray",
+      "title": "Photograph (grayscale)",
+      "file": "photo-gray.png",
+      "description": "NASA's portrait of astronaut Eileen Collins (public domain), converted to luminance, 256 x 256.",
+      "why": "A natural image: a few components capture the large light/dark layout, and fine detail arrives slowly.",
+      "height": 256,
+      "width": 256,
+      "channels": 1
+    },
+    {
+      "id": "photo-color",
+      "title": "Photograph (colour)",
+      "file": "photo-color.png",
+      "description": "The same public-domain NASA portrait in RGB, 256 x 256.",
+      "why": "Colour means three matrices (R, G, B) decomposed separately, so the storage count is three times larger.",
+      "height": 256,
+      "width": 256,
+      "channels": 3
+    }
+  ]
+}

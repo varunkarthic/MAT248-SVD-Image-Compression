@@ -1,0 +1,331 @@
+<!-- Learn it from the beginning: 15 chapters. Widgets are mounted by static/js/learn.js. -->
+<section class="chapter" id="learn" aria-labelledby="learn-title">
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">Part 1 · The basics</p>
+      <h2 id="learn-title">Learn it from the beginning</h2>
+      <p class="lede-sm">Fifteen short chapters, from &ldquo;what is a pixel&rdquo; to &ldquo;why can this compress an image&rdquo;. Each has one tiny numerical example and a few sentences you can say aloud. Switch on <strong>Details</strong> in the toolbar for precise statements and likely questions.</p>
+    </header>
+    <nav class="lj-index" aria-label="Chapters" data-testid="learn-index">
+      <p class="lj-progress" aria-live="polite"><span data-testid="learn-progress">Chapter 1 of 15</span></p>
+      <ol><li><a href="#ch-1" data-goto="1" aria-label="Chapter 1">1</a></li><li><a href="#ch-2" data-goto="2" aria-label="Chapter 2">2</a></li><li><a href="#ch-3" data-goto="3" aria-label="Chapter 3">3</a></li><li><a href="#ch-4" data-goto="4" aria-label="Chapter 4">4</a></li><li><a href="#ch-5" data-goto="5" aria-label="Chapter 5">5</a></li><li><a href="#ch-6" data-goto="6" aria-label="Chapter 6">6</a></li><li><a href="#ch-7" data-goto="7" aria-label="Chapter 7">7</a></li><li><a href="#ch-8" data-goto="8" aria-label="Chapter 8">8</a></li><li><a href="#ch-9" data-goto="9" aria-label="Chapter 9">9</a></li><li><a href="#ch-10" data-goto="10" aria-label="Chapter 10">10</a></li><li><a href="#ch-11" data-goto="11" aria-label="Chapter 11">11</a></li><li><a href="#ch-12" data-goto="12" aria-label="Chapter 12">12</a></li><li><a href="#ch-13" data-goto="13" aria-label="Chapter 13">13</a></li><li><a href="#ch-14" data-goto="14" aria-label="Chapter 14">14</a></li><li><a href="#ch-15" data-goto="15" aria-label="Chapter 15">15</a></li></ol>
+    </nav>
+    <div class="lj-chapters">
+  <article class="lj-ch" id="ch-1" data-ch="1" aria-labelledby="ch-1-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 1 of 15</p><h3 id="ch-1-t">What is an image?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>A digital grey-scale image is a rectangular grid of brightness measurements. The picture on your screen is just those numbers drawn as little squares of grey. In chapter 3 you can look at a real one.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mi>A</mi><mo>∈</mo><msup><mrow><mi>ℝ</mi></mrow><mrow><mi>m</mi><mo>×</mo><mi>n</mi></mrow></msup><mo>,</mo><mi>A</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><msub><mrow><mi>a</mi></mrow><mrow><mn>11</mn></mrow></msub></mtd><mtd><msub><mrow><mi>a</mi></mrow><mrow><mn>12</mn></mrow></msub></mtd><mtd><mo>…</mo></mtd></mtr><mtr><mtd><msub><mrow><mi>a</mi></mrow><mrow><mn>21</mn></mrow></msub></mtd><mtd><msub><mrow><mi>a</mi></mrow><mrow><mn>22</mn></mrow></msub></mtd><mtd><mo>…</mo></mtd></mtr><mtr><mtd><mo>⋮</mo></mtd><mtd><mo>⋮</mo></mtd><mtd><mo>⋱</mo></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p>A 2×2 picture with a dark left column and a bright right column is the table <math><mrow><mi>A</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>0</mn></mtd><mtd><mn>255</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>255</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math>.</p>
+      </div>
+      <div class="lj-col lj-col--fig"></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> Every method on this site, including the SVD, works on this table of numbers, so we will treat the picture as a matrix.</p>
+    <p class="script">A digital picture is a grid of numbers. A grey picture with m rows and n columns is an m by n table of brightness values. Everything we do next is arithmetic on that table.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p class="lj-wide">Formally a grey-scale image is a map <math><mrow><mo>{</mo><mn>1</mn><mo>,</mo><mo>…</mo><mo>,</mo><mi>m</mi><mo>}</mo><mo>×</mo><mo>{</mo><mn>1</mn><mo>,</mo><mo>…</mo><mo>,</mo><mi>n</mi><mo>}</mo><mo>→</mo><mo>{</mo><mn>0</mn><mo>,</mo><mo>…</mo><mo>,</mo><mn>255</mn><mo>}</mo></mrow></math>, which we regard as a real matrix <math><mrow><mi>A</mi><mo>∈</mo><msup><mrow><mi>ℝ</mi></mrow><mrow><mi>m</mi><mo>×</mo><mi>n</mi></mrow></msup></mrow></math>. A colour image is stored as one such matrix per channel.</p>
+      <details class="lj-q"><summary>Possible professor question: Is the image the matrix?</summary><p>The matrix is a representation: the picture sampled at m by n positions with 8-bit quantised brightness. For linear algebra we treat those whole numbers as real numbers.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-2" data-ch="2" aria-labelledby="ch-2-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 2 of 15</p><h3 id="ch-2-t">What is a pixel?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>A pixel (picture element) is one cell of the grid. In an 8-bit grey image its value is a whole number from 0 (black) to 255 (white). A colour pixel uses three numbers: red, green and blue.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mn>0</mn><mo>≤</mo><msub><mrow><mi>a</mi></mrow><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>≤</mo><mn>255</mn><mo>,</mo><msub><mrow><mi>a</mi></mrow><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∈</mo><mi>ℤ</mi></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p>0 is black, 64 is dark grey, 128 is about half-way (128/255 ≈ 0.50) and 255 is white. A pure red pixel is <math><mrow><mo>(</mo><mi>R</mi><mo>,</mo><mi>G</mi><mo>,</mo><mi>B</mi><mo>)</mo><mo>=</mo><mo>(</mo><mn>255</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></math>.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="rgb-hint" data-label=""></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> Each pixel becomes exactly one entry of the matrix, so a 512×512 picture is a matrix with 262,144 entries.</p>
+    <p class="script">A pixel is one cell of the picture. In a grey image it is a number from 0 for black to 255 for white. In a colour image a pixel is three numbers, one each for red, green and blue.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p>8 bits give <math><mrow><msup><mrow><mn>2</mn></mrow><mrow><mn>8</mn></mrow></msup><mo>=</mo><mn>256</mn></mrow></math> levels, <math><mrow><mn>0</mn><mo>,</mo><mo>…</mo><mo>,</mo><mn>255</mn></mrow></math>. A colour pixel is a vector in <math><mrow><msup><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mo>…</mo><mo>,</mo><mn>255</mn><mo>}</mo></mrow><mrow><mn>3</mn></mrow></msup></mrow></math>; RGBA adds a fourth, transparency, number. The stored values are gamma-encoded, not linear light; the project uses them as given.</p>
+      <details class="lj-q"><summary>Possible professor question: Why does the scale stop at 255?</summary><p>Because 8 bits store 2^8 = 256 different values, numbered 0 to 255.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-3" data-ch="3" aria-labelledby="ch-3-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 3 of 15</p><h3 id="ch-3-t">How can an image be a matrix?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>Read the picture row by row. The brightness of the pixel in row <i>i</i> and column <i>j</i> is placed in entry <math><mrow><msub><mrow><mi>a</mi></mrow><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow></math>. The numbers are the picture. Try it on the right: hover, focus (Tab, then arrow keys) or click a pixel.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><msub><mrow><mi>a</mi></mrow><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mtext>brightness of the pixel in row&#160;</mtext><mi>i</mi><mtext>, column&#160;</mtext><mi>j</mi></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p>The real 16×16 sample image <code>tiny-face</code> is shown as a grid of pixels and as the numbers in a matrix. An image is a collection of numbers arranged in rows and columns.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="pixels" data-label="From pixels to matrices"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> The laboratory loads your photo in the same way and builds one matrix per colour channel; the SVD is then computed on those matrices.</p>
+    <p class="script">An image is a collection of numbers arranged in rows and columns. When I point at a pixel in row i and column j, the matrix entry a i j is its brightness. So the picture and the matrix are the same information.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p class="lj-wide">An RGB image is three matrices <math><mrow><msub><mrow><mi>A</mi></mrow><mrow><mi>R</mi></mrow></msub><mo>,</mo><msub><mrow><mi>A</mi></mrow><mrow><mi>G</mi></mrow></msub><mo>,</mo><msub><mrow><mi>A</mi></mrow><mrow><mi>B</mi></mrow></msub><mo>∈</mo><msup><mrow><mi>ℝ</mi></mrow><mrow><mi>m</mi><mo>×</mo><mi>n</mi></mrow></msup></mrow></math> (RGBA has four). Each channel is decomposed on its own.</p>
+      <details class="lj-q"><summary>Possible professor question: What is the matrix of a colour image?</summary><p>Three m×n matrices, one per channel, each with its own SVD.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-4" data-ch="4" aria-labelledby="ch-4-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 4 of 15</p><h3 id="ch-4-t">Rows and columns</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>A row runs left to right; a column runs top to bottom. An <i>m</i>×<i>n</i> matrix has <i>m</i> rows and <i>n</i> columns, always rows first. Entry <math><mrow><msub><mrow><mi>a</mi></mrow><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow></math> is in row <i>i</i>, column <i>j</i>. Click a number to see its row and column.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mi>A</mi><mo>∈</mo><msup><mrow><mi>ℝ</mi></mrow><mrow><mi>m</mi><mo>×</mo><mi>n</mi></mrow></msup><mtext>&#160;has&#160;</mtext><mi>m</mi><mtext>&#160;rows and&#160;</mtext><mi>n</mi><mtext>&#160;columns</mtext></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p class="lj-wide"><math><mrow><mi>B</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr><mtr><mtd><mn>5</mn></mtd><mtd><mn>6</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math> has 3 rows and 2 columns, so it is 3×2. Row 2 is (3, 4), column 1 is (1, 3, 5) and <math><mrow><msub><mrow><mi>b</mi></mrow><mrow><mn>32</mn></mrow></msub><mo>=</mo><mn>6</mn></mrow></math>.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="rowcol" data-label="Rows and columns"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> A 16×16 image has 16 rows and 16 columns of pixels. The SVD finds patterns that run along those rows and columns.</p>
+    <p class="script">A matrix is a table. Rows go across and columns go down, and we always say rows first. An m by n matrix has m rows and n columns, and entry i j is in row i, column j.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p>Rows of <math><mrow><mi>A</mi></mrow></math> are vectors in <math><mrow><msup><mrow><mi>ℝ</mi></mrow><mrow><mi>n</mi></mrow></msup></mrow></math>, columns are vectors in <math><mrow><msup><mrow><mi>ℝ</mi></mrow><mrow><mi>m</mi></mrow></msup></mrow></math>. The row space and the column space have the same dimension, the rank.</p>
+      <details class="lj-q"><summary>Possible professor question: Does row rank equal column rank?</summary><p>Yes, for every matrix: the maximum number of independent rows equals the maximum number of independent columns.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-5" data-ch="5" aria-labelledby="ch-5-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 5 of 15</p><h3 id="ch-5-t">Matrix multiplication</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>To get one entry of a product, take a row of the left matrix and a column of the right matrix, multiply matching entries and add them up. Entry <math><mrow><msub><mrow><mi>c</mi></mrow><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow></math> uses row <i>i</i> and column <i>j</i>. The inner sizes must match: (m×p)(p×n) gives m×n.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><msub><mrow><mi>c</mi></mrow><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover></mrow><msub><mrow><mi>a</mi></mrow><mrow><mi>i</mi><mi>k</mi></mrow></msub><msub><mrow><mi>b</mi></mrow><mrow><mi>k</mi><mi>j</mi></mrow></msub></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p class="lj-wide">With <math><mrow><mi>A</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>3</mn></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mn>3</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math> and <math><mrow><mi>B</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math> the top-left entry of AB is 3·1 + 1·1 = 4. Step through all four entries on the right.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="mul" data-label="Matrix multiplication"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> Rebuilding an image from its SVD factors, <math><mrow><mi>U</mi><mi>Σ</mi><msup><mrow><mi>V</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup></mrow></math>, is nothing more than this multiplication.</p>
+    <p class="script">To multiply two matrices I take a row from the left one and a column from the right one, multiply the matching numbers and add. For example three times one plus one times one is four. Doing this for every row and column pair fills the product.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p class="lj-wide">Multiplication is composition of linear maps, <math><mrow><mo>(</mo><mi>A</mi><mi>B</mi><mo>)</mo><mi>x</mi><mo>=</mo><mi>A</mi><mo>(</mo><mi>B</mi><mi>x</mi><mo>)</mo></mrow></math>. It is associative and not commutative, and <math><mrow><msup><mrow><mo>(</mo><mi>A</mi><mi>B</mi><mo>)</mo></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mo>=</mo><msup><mrow><mi>B</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><msup><mrow><mi>A</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup></mrow></math>.</p>
+      <details class="lj-q"><summary>Possible professor question: Is AB = BA?</summary><p>Not in general. With A = [[1,1],[0,1]] and B = [[1,0],[1,1]], AB = [[2,1],[1,1]] but BA = [[1,1],[1,2]].</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-6" data-ch="6" aria-labelledby="ch-6-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 6 of 15</p><h3 id="ch-6-t">Vectors</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>A vector is a list of numbers, in other words a matrix with one column. It has a length and a direction. A <em>unit vector</em> has length 1; it records direction only.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mo stretchy="false">‖</mo><mi>x</mi><mo stretchy="false">‖</mo><mo>=</mo><msqrt><mrow><msubsup><mrow><mi>x</mi></mrow><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></msubsup><mo>+</mo><msubsup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow><mrow><mn>2</mn></mrow></msubsup></mrow></msqrt></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p>For x = (3, 4): ‖x‖ = √(9 + 16) = 5, so the unit vector in the same direction is (3/5, 4/5). The dot product of x with (1, 0) is 3·1 + 4·0 = 3.</p>
+      </div>
+      <div class="lj-col lj-col--fig"></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> The columns <math><mrow><msub><mrow><mi>u</mi></mrow><mrow><mi>i</mi></mrow></msub></mrow></math> of U and <math><mrow><msub><mrow><mi>v</mi></mrow><mrow><mi>i</mi></mrow></msub></mrow></math> of V are unit vectors: they only carry directions, and all the sizes live in the singular values.</p>
+    <p class="script">A vector is a list of numbers with a length and a direction. The vector three four has length five, because three squared plus four squared is twenty-five. Dividing by the length gives a unit vector that keeps only the direction.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p><math><mrow><mo stretchy="false">‖</mo><mi>x</mi><mo stretchy="false">‖</mo><mo>=</mo><msqrt><mrow><msup><mrow><mi>x</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mi>x</mi></mrow></msqrt></mrow></math>; two vectors are orthogonal when <math><mrow><msup><mrow><mi>u</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mi>v</mi><mo>=</mo><mn>0</mn></mrow></math>; the columns of an orthogonal matrix are orthonormal.</p>
+      <details class="lj-q"><summary>Possible professor question: Why must the singular vectors be unit vectors?</summary><p>So that the size of each layer is stored only in sigma, which makes the factorisation unique up to signs and lets the layers be compared by sigma alone.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-7" data-ch="7" aria-labelledby="ch-7-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 7 of 15</p><h3 id="ch-7-t">What does matrix rank mean?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>Rank counts the truly independent rows (or columns). If one row is a multiple of another it adds no new information.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mi>rank</mi><mo>(</mo><mi>A</mi><mo>)</mo><mo>=</mo><mtext>number of linearly independent columns</mtext><mo>=</mo><mtext>number of nonzero singular values</mtext></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p class="lj-wide"><math><mrow><mi>P</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math>: row 2 = 2 × row 1, so rank 1. <math><mrow><mi>I</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math> has independent rows, so rank 2. Use the buttons on the right.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="rank" data-label="Rank"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> A rank-k image is a sum of k simple layers; the SVD tells us how important each layer is.</p>
+    <p class="script">Rank counts how many independent rows a matrix has. The matrix one two, two four has rank one, because its second row is twice its first. The identity matrix has rank two.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p>For <math><mrow><mi>A</mi><mo>∈</mo><msup><mrow><mi>ℝ</mi></mrow><mrow><mi>m</mi><mo>×</mo><mi>n</mi></mrow></msup></mrow></math>, <math><mrow><mi>r</mi><mo>=</mo><mi>rank</mi><mo>(</mo><mi>A</mi><mo>)</mo><mo>≤</mo><mi>min</mi><mo>(</mo><mi>m</mi><mo>,</mo><mi>n</mi><mo>)</mo></mrow></math> equals the dimension of the column space and of the row space, and equals the number of nonzero singular values.</p>
+      <details class="lj-q"><summary>Possible professor question: How are rank(A) and rank(AᵀA) related?</summary><p>They are equal: A and AᵀA have the same null space, so the same rank.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-8" data-ch="8" aria-labelledby="ch-8-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 8 of 15</p><h3 id="ch-8-t">Transpose</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>The transpose flips a matrix across its main diagonal: rows become columns. Entry (i, j) moves to (j, i). Hover over or focus a number to see where it goes.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><msub><mrow><mo>(</mo><msup><mrow><mi>A</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mo>)</mo></mrow><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mrow><mi>a</mi></mrow><mrow><mi>j</mi><mi>i</mi></mrow></msub></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p class="lj-wide"><math><mrow><mi>A</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd><mtd><mn>3</mn></mtd></mtr><mtr><mtd><mn>4</mn></mtd><mtd><mn>5</mn></mtd><mtd><mn>6</mn></mtd></mtr></mtable><mo>]</mo></mrow><mo>,</mo><msup><mrow><mi>A</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>4</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd><mtd><mn>5</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>6</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math>. A is 2×3, its transpose is 3×2.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="transpose" data-label="Transpose"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> In <math><mrow><mi>A</mi><mo>=</mo><mi>U</mi><mi>Σ</mi><msup><mrow><mi>V</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup></mrow></math> the matrix Vᵀ appears, and the eigenvalues of AᵀA are the squares of the singular values.</p>
+    <p class="script">The transpose turns rows into columns. If A is two by three then A transpose is three by two, and the entry in row i column j moves to row j column i.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p class="lj-wide"><math><mrow><msup><mrow><mo>(</mo><mi>A</mi><mi>B</mi><mo>)</mo></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mo>=</mo><msup><mrow><mi>B</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><msup><mrow><mi>A</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mo>,</mo><msup><mrow><mo>(</mo><msup><mrow><mi>A</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mo>)</mo></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mo>=</mo><mi>A</mi></mrow></math>. <math><mrow><msup><mrow><mi>A</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mi>A</mi></mrow></math> is symmetric and positive semidefinite: <math><mrow><msup><mrow><mi>x</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><msup><mrow><mi>A</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mi>A</mi><mi>x</mi><mo>=</mo><msup><mrow><mo stretchy="false">‖</mo><mi>A</mi><mi>x</mi><mo stretchy="false">‖</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>≥</mo><mn>0</mn></mrow></math>.</p>
+      <details class="lj-q"><summary>Possible professor question: Why is AᵀA symmetric?</summary><p>(AᵀA)ᵀ = Aᵀ(Aᵀ)ᵀ = AᵀA.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-9" data-ch="9" aria-labelledby="ch-9-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 9 of 15</p><h3 id="ch-9-t">Eigenvalues and eigenvectors</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>An eigenvector of a square matrix is a direction that the matrix only stretches (or flips) but never turns. The stretch factor is the eigenvalue.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mi>A</mi><mi>v</mi><mo>=</mo><mi>λ</mi><mi>v</mi></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p>For <math><mrow><mi>A</mi><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>3</mn></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mn>3</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math>: A(1, 1)ᵀ = (4, 4)ᵀ = 4·(1, 1)ᵀ and A(1, −1)ᵀ = (2, −2)ᵀ = 2·(1, −1)ᵀ. So λ = 4 along (1, 1) and λ = 2 along (1, −1). Drag the slider on the right.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="eigen" data-label="Eigenvectors"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> SVD uses the eigenvectors of AᵀA; the square roots of the eigenvalues are the singular values.</p>
+    <p class="script">An eigenvector is a direction that the matrix only stretches. For the matrix three one one three, the direction one one is stretched by four and the direction one minus one by two. Those two numbers are the semi-axes of the ellipse the unit circle becomes.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p>Eigenvalues solve <math><mrow><mi>det</mi><mo>(</mo><mi>A</mi><mo>−</mo><mi>λ</mi><mi>I</mi><mo>)</mo><mo>=</mo><mn>0</mn></mrow></math>. A real symmetric matrix has real eigenvalues and orthogonal eigenvectors. Since AᵀA is symmetric positive semidefinite, its eigenvalues are real and ≥ 0.</p>
+      <details class="lj-q"><summary>Possible professor question: Can an eigenvalue of AᵀA be zero?</summary><p>Yes, exactly when A has a nonzero vector x with Ax = 0, that is when A has rank less than n.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-10" data-ch="10" aria-labelledby="ch-10-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 10 of 15</p><h3 id="ch-10-t">What is the SVD?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>Every matrix, square or not, can be written as: a rotation or reflection, then a stretch along the axes, then another rotation or reflection. That is the singular value decomposition.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mi>A</mi><mo>=</mo><mi>U</mi><mi>Σ</mi><msup><mrow><mi>V</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p class="lj-wide"><math><mrow><mrow><mo>[</mo><mtable><mtr><mtd><mn>3</mn></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mn>3</mn></mtd></mtr></mtable><mo>]</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow><mrow><mo>[</mo><mtable><mtr><mtd><mn>4</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo></mrow><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math>. The full calculation is in the <a href="#worked">2×2 example</a>.</p>
+      </div>
+      <div class="lj-col lj-col--fig"></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> The SVD splits an image matrix into ranked layers; keeping the strongest layers is the compression.</p>
+    <p class="script">The SVD writes any matrix as U times Sigma times V transpose. U and V are rotations or reflections, and Sigma stretches along the axes. For our two by two example the stretches are four and two.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p><strong>Theorem.</strong> Every real <math><mrow><mi>A</mi><mo>∈</mo><msup><mrow><mi>ℝ</mi></mrow><mrow><mi>m</mi><mo>×</mo><mi>n</mi></mrow></msup></mrow></math> has <math><mrow><mi>A</mi><mo>=</mo><mi>U</mi><mi>Σ</mi><msup><mrow><mi>V</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup></mrow></math> with U (m×m) and V (n×n) orthogonal and Σ (m×n) diagonal with <math><mrow><msub><mrow><mi>σ</mi></mrow><mrow><mn>1</mn></mrow></msub><mo>≥</mo><msub><mrow><mi>σ</mi></mrow><mrow><mn>2</mn></mrow></msub><mo>≥</mo><mo>…</mo><mo>≥</mo><mn>0</mn></mrow></math>. The σᵢ are unique; U and V are not (signs, repeated σ).</p>
+      <details class="lj-q"><summary>Possible professor question: Is the SVD unique?</summary><p>The singular values are. The vectors are determined up to sign when the singular values are distinct, and have more freedom if some are equal.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-11" data-ch="11" aria-labelledby="ch-11-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 11 of 15</p><h3 id="ch-11-t">What are U, Sigma and V<sup>T</sup>?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>The rows of Vᵀ (columns of V) are the input directions, Σ stretches each by its singular value, and the columns of U are the output directions. Pairing them gives <math><mrow><mi>A</mi><msub><mrow><mi>v</mi></mrow><mrow><mi>i</mi></mrow></msub><mo>=</mo><msub><mrow><mi>σ</mi></mrow><mrow><mi>i</mi></mrow></msub><msub><mrow><mi>u</mi></mrow><mrow><mi>i</mi></mrow></msub></mrow></math>.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mi>A</mi><msub><mrow><mi>v</mi></mrow><mrow><mi>i</mi></mrow></msub><mo>=</mo><msub><mrow><mi>σ</mi></mrow><mrow><mi>i</mi></mrow></msub><msub><mrow><mi>u</mi></mrow><mrow><mi>i</mi></mrow></msub></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p class="lj-wide">With <math><mrow><msub><mrow><mi>v</mi></mrow><mrow><mn>1</mn></mrow></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></mrow></math>: <math><mrow><mi>A</mi><msub><mrow><mi>v</mi></mrow><mrow><mn>1</mn></mrow></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>(</mo><mn>4</mn><mo>,</mo><mn>4</mn><mo>)</mo><mo>=</mo><mn>4</mn><msub><mrow><mi>u</mi></mrow><mrow><mn>1</mn></mrow></msub></mrow></math>, so σ₁ = 4 and u₁ = v₁.</p>
+      </div>
+      <div class="lj-col lj-col--fig"></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> The products <math><mrow><msub><mrow><mi>σ</mi></mrow><mrow><mi>i</mi></mrow></msub><msub><mrow><mi>u</mi></mrow><mrow><mi>i</mi></mrow></msub><msup><mrow><msub><mrow><mi>v</mi></mrow><mrow><mi>i</mi></mrow></msub></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup></mrow></math> are the layers that we add up to rebuild the image.</p>
+    <p class="script">V transpose picks the input directions, Sigma stretches each one, and U gives the output directions. A times v one equals sigma one times u one. In our example that is four times u one.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p class="lj-wide"><math><mrow><msup><mrow><mi>U</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mi>U</mi><mo>=</mo><mi>I</mi></mrow></math>, <math><mrow><msup><mrow><mi>V</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mi>V</mi><mo>=</mo><mi>I</mi></mrow></math>; Σ is m×n with σᵢ on the diagonal. <math><mrow><msup><mrow><mi>A</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mi>A</mi><mo>=</mo><mi>V</mi><msup><mrow><mi>Σ</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup><mi>Σ</mi><msup><mrow><mi>V</mi></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup></mrow></math>, so vᵢ are eigenvectors of AᵀA with eigenvalue σᵢ², and uᵢ = Avᵢ/σᵢ when σᵢ &gt; 0.</p>
+      <details class="lj-q"><summary>Possible professor question: Why are U and V orthogonal?</summary><p>Orthogonal maps keep lengths and angles, so all the stretching is in Sigma and the factorisation is numerically well behaved.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-12" data-ch="12" aria-labelledby="ch-12-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 12 of 15</p><h3 id="ch-12-t">Why are singular values in descending order?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>By convention the largest singular value comes first, and that order is the order of importance: the first layer captures the most of the picture.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><msub><mrow><mi>σ</mi></mrow><mrow><mn>1</mn></mrow></msub><mo>≥</mo><msub><mrow><mi>σ</mi></mrow><mrow><mn>2</mn></mrow></msub><mo>≥</mo><mo>…</mo><mo>≥</mo><mn>0</mn><mtext>&#160;, share of layer i =&#160;</mtext><mfrac><mrow><msubsup><mrow><mi>σ</mi></mrow><mrow><mi>i</mi></mrow><mrow><mn>2</mn></mrow></msubsup></mrow><mrow><mrow><munder><mo>∑</mo><mi>j</mi></munder></mrow><msubsup><mrow><mi>σ</mi></mrow><mrow><mi>j</mi></mrow><mrow><mn>2</mn></mrow></msubsup></mrow></mfrac></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p>For σ = (4, 2): shares are 16/20 = 80 % and 4/20 = 20 %.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-live" data-live="sigma" aria-live="polite"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> Because large singular values come first, keeping the first k layers keeps the biggest pieces.</p>
+    <p class="script">Singular values are listed from largest to smallest. The biggest one is the most important layer. In our example the first layer carries sixteen twentieths, which is eighty percent, of the energy.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p>The σᵢ are the square roots of the eigenvalues of AᵀA, which can be listed in any order; sorting them decreasingly is a convention that makes the first k terms the best rank-k approximation (Eckart–Young–Mirsky).</p>
+      <details class="lj-q"><summary>Possible professor question: Is the descending order necessary?</summary><p>Any order gives a valid factorisation, but only the descending order makes truncating after k terms optimal.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-13" data-ch="13" aria-labelledby="ch-13-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 13 of 15</p><h3 id="ch-13-t">What happens when we keep fewer components?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>Keep only the first k terms of the sum and drop the rest. The small terms carry the least important detail.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><msub><mrow><mi>A</mi></mrow><mrow><mi>k</mi></mrow></msub><mo>=</mo><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover></mrow><msub><mrow><mi>σ</mi></mrow><mrow><mi>i</mi></mrow></msub><msub><mrow><mi>u</mi></mrow><mrow><mi>i</mi></mrow></msub><msup><mrow><msub><mrow><mi>v</mi></mrow><mrow><mi>i</mi></mrow></msub></mrow><mrow><mi mathvariant="normal">T</mi></mrow></msup></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p class="lj-wide">For our 2×2 matrix with k = 1: <math><mrow><msub><mrow><mi>A</mi></mrow><mrow><mn>1</mn></mrow></msub><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>2</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo></mrow><mo>,</mo><mi>A</mi><mo>−</mo><msub><mrow><mi>A</mi></mrow><mrow><mn>1</mn></mrow></msub><mo>=</mo><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></mrow></math>, error ‖A − A₁‖<sub>F</sub> = 2.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-live" data-live="energy" aria-live="polite"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> Compression stores only the first k layers instead of all pixels; the dropped layers are the loss.</p>
+    <p class="script">Keeping fewer components means keeping only the first k layers of the sum. In our example one layer gives the matrix of twos, and the leftover has size two, which equals the second singular value.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p class="lj-wide"><strong>Eckart–Young–Mirsky.</strong> Among all matrices of rank at most k, A<sub>k</sub> minimises both the Frobenius and the spectral norm of A − B. The errors are <math><mrow><mo stretchy="false">‖</mo><mi>A</mi><mo>−</mo><msub><mrow><mi>A</mi></mrow><mrow><mi>k</mi></mrow></msub><msub><mrow><mo stretchy="false">‖</mo></mrow><mrow><mi>F</mi></mrow></msub><mo>=</mo><msqrt><mrow><mrow><munder><mo>∑</mo><mrow><mi>i</mi><mo>&gt;</mo><mi>k</mi></mrow></munder></mrow><msubsup><mrow><mi>σ</mi></mrow><mrow><mi>i</mi></mrow><mrow><mn>2</mn></mrow></msubsup></mrow></msqrt></mrow></math> and <math><mrow><mo stretchy="false">‖</mo><mi>A</mi><mo>−</mo><msub><mrow><mi>A</mi></mrow><mrow><mi>k</mi></mrow></msub><msub><mrow><mo stretchy="false">‖</mo></mrow><mrow><mn>2</mn></mrow></msub><mo>=</mo><msub><mrow><mi>σ</mi></mrow><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow></math>.</p>
+      <details class="lj-q"><summary>Possible professor question: What is the error of the rank-k truncation?</summary><p>The Frobenius error is the square root of the sum of the squares of the discarded singular values; the spectral error is sigma(k+1).</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-14" data-ch="14" aria-labelledby="ch-14-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 14 of 15</p><h3 id="ch-14-t">How does the reconstruction change as the rank increases?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>Each extra layer adds detail and the error shrinks. After <em>r</em> = rank(A) layers the matrix is rebuilt exactly. Step through the real numbers on the right.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mi>E</mi><mo>(</mo><mi>k</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover></mrow><msubsup><mrow><mi>σ</mi></mrow><mrow><mi>i</mi></mrow><mrow><mn>2</mn></mrow></msubsup></mrow><mrow><mrow><munder><mo>∑</mo><mi>i</mi></munder></mrow><msubsup><mrow><mi>σ</mi></mrow><mrow><mi>i</mi></mrow><mrow><mn>2</mn></mrow></msubsup></mrow></mfrac></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p>k = 1: E = 16/20 = 0.8, error 2. k = 2: E = 20/20 = 1, error 0, and <math><mrow><msub><mrow><mi>A</mi></mrow><mrow><mn>2</mn></mrow></msub><mo>=</mo><mi>A</mi></mrow></math>.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="rankstep" data-label="Reconstruction as rank increases"></div><div class="lj-live" data-live="rank" aria-live="polite"></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> This is the slider in the laboratory: more components give a sharper picture and a larger storage count.</p>
+    <p class="script">As the rank goes up, the reconstruction gets closer to the original. In the two by two example, rank one keeps eighty percent of the energy, and rank two gives the original matrix exactly.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p>The exact error <math><mrow><mo stretchy="false">‖</mo><mi>A</mi><mo>−</mo><msub><mrow><mi>A</mi></mrow><mrow><mi>k</mi></mrow></msub><mo stretchy="false">‖</mo><mi>F</mi></mrow></math> never increases with k and is 0 at k = rank(A); E(k) is nondecreasing and reaches 1. (After rounding to 8 bits the displayed image can deviate slightly from this exact statement.)</p>
+      <details class="lj-q"><summary>Possible professor question: Does the quality always increase with k?</summary><p>The exact (unrounded) Frobenius error never increases with k. After rounding and clipping to 8-bit integers the measured numbers can differ a little.</p></details>
+    </div>
+  </article>
+  <article class="lj-ch" id="ch-15" data-ch="15" aria-labelledby="ch-15-t">
+    <header class="lj-ch-head"><p class="eyebrow">Chapter 15 of 15</p><h3 id="ch-15-t">Why does this help approximation and potentially compression?</h3></header>
+    <div class="lj-grid">
+      <div class="lj-col">
+        <h4>What it means</h4>
+        <p>If the singular values fall quickly, a small k reproduces the picture closely. Storing k columns of U, k rows of Vᵀ and k values needs far fewer numbers than all m·n pixels. It is a possible saving, not a promise.</p>
+        <h4>The equation</h4>
+        <div class="eq"><math display="block"><mrow><mi>k</mi><mo>(</mo><mi>m</mi><mo>+</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><<mi>m</mi><mi>n</mi></mrow></math></div>
+        <h4>One tiny example</h4>
+        <p>For a 100×100 image with k = 5: 5·(100 + 100 + 1) = 1005 numbers instead of 10,000. For the 2×2 example, 1·(2+2+1) = 5 &gt; 4, so no saving at all.</p>
+      </div>
+      <div class="lj-col lj-col--fig"><div class="lj-widget" data-widget="lablink" data-label=""></div></div>
+    </div>
+    <p class="lj-conn"><strong>Connection to image compression.</strong> The laboratory reports this scalar count, measures the real error, and shows when the SVD does not help.</p>
+    <p class="script">If most of the image is captured by a few layers, we only store those layers. For a hundred by hundred picture with five layers that is about a thousand numbers instead of ten thousand. This is a count of numbers, not file size, and it only helps when the singular values decay fast.</p>
+    <div class="only-details lj-rigor">
+      <h4>Precisely</h4>
+      <p>k(m+n+1) &lt; mn ⇔ k &lt; mn/(m+n+1). This is a count of scalars, not a file size: float64 factors can be larger than the 8-bit image, and JPEG or WebP often beat plain SVD.</p>
+      <details class="lj-q"><summary>Possible professor question: Is SVD compression better than JPEG?</summary><p>No general claim: JPEG and WebP typically compress natural photographs better. The SVD is the optimal low-rank approximation and a clear linear algebra illustration.</p></details>
+    </div>
+  </article>
+    </div>
+  </div>
+</section>

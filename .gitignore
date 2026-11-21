@@ -27,3 +27,6 @@ docs/_build/
 # Local outputs
 out/
 *.out.png
+
+# E2E failure screenshots
+tests/e2e/artifacts/

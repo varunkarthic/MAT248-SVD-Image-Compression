@@ -14,6 +14,7 @@ dependencies = ["numpy>=1.24", "flask>=3.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
+e2e = ["pytest>=7", "playwright>=1.45"]
 docs = ["sphinx>=7", "furo>=2024.1", "sphinx-design>=0.5", "sphinx-copybutton>=0.5", "sphinxcontrib-mermaid>=0.9"]
 
 [project.scripts]
@@ -24,7 +25,7 @@ svdcomp-web = "svdcomp.web:main"
 packages = ["svdcomp"]
 
 [tool.setuptools.package-data]
-svdcomp = ["templates/*.html"]
+svdcomp = ["templates/*.html", "static/css/*.css", "static/js/*.js", "static/js/*/*.js", "static/img/*", "demo_assets/manifest.json", "demo_assets/README.md", "demo_assets/samples/*.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

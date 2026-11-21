@@ -1,0 +1,25 @@
+/* Cinematic intro overlay. Hidden by default so that a JS failure can never block the page;
+   intro.js adds .is-on to show it. */
+.intro { display: none; position: fixed; inset: 0; z-index: 200; background: #15171c; color: #f7f3ea;
+         place-items: center; align-content: center; gap: 1rem; padding: 1rem; opacity: 1;
+         transition: opacity .4s var(--ease); }
+.intro.is-on { display: grid; }
+.intro.is-leaving { opacity: 0; }
+.intro__stage { position: relative; width: min(94vw, 960px); aspect-ratio: 16 / 9; }
+.intro__canvas { display: block; width: 100%; height: 100%; background: #15171c; }
+.intro__title { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; opacity: 0;
+                pointer-events: none; padding: 0 1rem; }
+.intro__title.is-on { opacity: 1; transition: opacity .4s var(--ease); }
+.intro__brand { font: 700 clamp(2.6rem, 9vw, 5.6rem)/1 var(--font-display); letter-spacing: .06em; margin: 0 0 .3em; max-width: none; }
+.intro__brand span { color: #8fb0ee; }
+.intro__tag { font: italic clamp(1rem, 2.6vw, 1.6rem)/1.3 var(--font-display); color: #e7e1d3; margin: 0 auto; }
+.intro__note { font: 500 .78rem/1.4 var(--font-mono); color: #b9b6ae; margin: 0; text-align: center; max-width: 60ch; }
+.intro__skip { position: absolute; right: clamp(.75rem, 3vw, 2rem); bottom: clamp(.75rem, 3vw, 2rem); background: transparent;
+               color: #f7f3ea; border-color: #f7f3ea; }
+.intro__skip:hover:not(:disabled) { background: #f7f3ea; color: #15171c; }
+.intro :focus-visible { outline-color: #8fb0ee; }
+/* reduced motion: a static title card, no motion at all */
+.intro.is-static .intro__canvas { visibility: hidden; }
+.intro.is-static .intro__title { opacity: 1; transition: none; }
+.intro.is-static, .intro.is-static .intro__title { transition: none; }
+body.intro-lock { overflow: hidden; }
