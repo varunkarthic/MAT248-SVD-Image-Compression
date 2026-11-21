@@ -44,7 +44,7 @@
       "id": "low-rank",
       "title": "Low-rank construction",
       "file": "low-rank.png",
-      "description": "A 256 x 192 image built as a sum of exactly 5 separable terms.",
+      "description": "A 256 x 192 image: four separable cosine patterns plus a constant brightness offset.",
       "why": "Before 8-bit rounding the rank is exactly 5: the spectrum drops to rounding-noise level after sigma_5, and k = 5 is already nearly perfect.",
       "height": 256,
       "width": 192,

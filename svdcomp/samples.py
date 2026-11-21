@@ -51,13 +51,12 @@ def edges():
 
 
 def low_rank():
-    """Rank-5 matrix (before 8-bit rounding), 256 x 192, built from smooth separable factors."""
+    """Rank-5 matrix (before 8-bit rounding), 256 x 192: four separable cosine terms plus a constant offset."""
     y = np.linspace(0, 1, 256)[:, None]
     x = np.linspace(0, 1, 192)[None, :]
-    terms = [np.ones_like(y) * np.ones_like(x), np.sin(np.pi * y) * np.cos(np.pi * x),
-             y * x, np.cos(2 * np.pi * y) * np.sin(2 * np.pi * x), (y - 0.5) ** 2 * np.ones_like(x)]
-    weights = [3.0, 2.0, 1.5, 1.0, 0.8]
-    a = sum(w * t for w, t in zip(weights, terms))
+    weights = [1.0, 0.75, 0.55, 0.4]
+    a = sum(w * np.cos(i * np.pi * y) * np.cos((5 - i) * np.pi * x)
+            for i, w in enumerate(weights, start=1))
     return _u8(255 * (a - a.min()) / (a.max() - a.min()))
 
 
@@ -103,7 +102,7 @@ CATALOG = [
      "Diagonal stripes, a grid and concentric rings.",
      "Diagonal and circular edges are not aligned with rows and columns, so the singular values decay slowly."),
     ("low-rank", low_rank, "Low-rank construction",
-     "A 256 x 192 image built as a sum of exactly 5 separable terms.",
+     "A 256 x 192 image: four separable cosine patterns plus a constant brightness offset.",
      "Before 8-bit rounding the rank is exactly 5: the spectrum drops to rounding-noise level after sigma_5, and k = 5 is already nearly perfect."),
     ("texture", texture, "Complex texture",
      "Fractal 1/f noise with detail at every scale.",

@@ -234,7 +234,7 @@ def test_known_ranks_of_samples():
     assert numerical_rank(samples.checkerboard()) == 2
     assert numerical_rank(samples.gradient()) <= 3                    # rank 2 plus rounding noise
     f = decompose(samples.low_rank(), "exact")
-    assert f.s[0, 4] / f.s[0, 0] > 1e-3 and f.s[0, 5] / f.s[0, 0] < 5e-3   # five real terms, then rounding noise
+    assert f.s[0, 4] / f.s[0, 0] > 0.02 and f.s[0, 5] / f.s[0, 0] < 5e-3   # five real terms, then rounding noise
 
 
 def test_gallery_routes_and_every_sample_runs_through_svd(client):
