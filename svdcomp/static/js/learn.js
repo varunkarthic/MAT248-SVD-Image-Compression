@@ -1,0 +1,2 @@
+/* learn */
+export function init() {}

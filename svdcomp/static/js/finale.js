@@ -1,0 +1,2 @@
+/* finale */
+export function init() {}

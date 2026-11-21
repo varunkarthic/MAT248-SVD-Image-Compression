@@ -1,0 +1,2 @@
+/* worked */
+export function init() {}

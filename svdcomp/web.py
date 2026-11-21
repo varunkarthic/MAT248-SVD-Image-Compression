@@ -146,8 +146,9 @@ def create_app(cache_size=8):
 
     @app.get("/")
     def index():
-        return render_template("index.html", max_exact_pixels=MAX_EXACT_PIXELS,
-                               max_block_pixels=MAX_BLOCK_PIXELS, default_rank=DEFAULT_RANK_BUDGET)
+        return render_template("index.html", max_exact_pixels=MAX_EXACT_PIXELS, max_pixels=MAX_PIXELS,
+                               max_block_pixels=MAX_BLOCK_PIXELS, default_rank=DEFAULT_RANK_BUDGET,
+                               max_upload_bytes=MAX_UPLOAD_BYTES)
 
     @app.post("/api/upload")
     def upload():

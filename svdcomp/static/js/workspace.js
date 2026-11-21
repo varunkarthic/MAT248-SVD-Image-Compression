@@ -1,0 +1,2 @@
+/* workspace */
+export function init() {}
