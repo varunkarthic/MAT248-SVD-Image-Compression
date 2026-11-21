@@ -1,4 +1,4 @@
-"""Flask web UI: upload an image, decompose it once, then explore any rank k."""
+﻿"""Flask web UI: upload an image, decompose it once, then explore any rank k."""
 
 import argparse
 import base64
@@ -118,7 +118,7 @@ def create_app(cache_size=8):
         file = request.files.get("image")
         if file is None:
             return _error("no file uploaded (form field 'image')")
-        img = decode_image(file.read())
+        img = decode_image(file.read(), max_pixels=MAX_PIXELS)
         h, w = img.shape[:2]
         if h * w > MAX_PIXELS:
             return _error(f"image has {h * w:,} pixels; the limit is {MAX_PIXELS:,}")

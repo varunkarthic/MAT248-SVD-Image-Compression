@@ -14,8 +14,15 @@ from pathlib import Path
 import numpy as np
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+DEFAULT_MAX_PIXELS = 100_000_000  # decoder default; the web UI passes a much smaller limit
 _PNG_CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}
 _PNG_DEPTHS = {0: (1, 2, 4, 8, 16), 2: (8, 16), 3: (1, 2, 4, 8), 4: (8, 16), 6: (8, 16)}
+
+
+def _check_pixels(width, height, max_pixels):
+    """Reject an image whose header claims more than ``max_pixels`` pixels (before any allocation)."""
+    if max_pixels is not None and width * height > max_pixels:
+        raise ValueError(f"image has {width * height:,} pixels; the limit is {max_pixels:,}")
 
 
 def as_uint8_image(img):
@@ -87,8 +94,12 @@ def _unfilter(raw, height, stride, bpp):
     return out
 
 
-def decode_png(data):
-    """Decode a non-interlaced PNG (all colour types, bit depths 1-16)."""
+def decode_png(data, max_pixels=DEFAULT_MAX_PIXELS):
+    """Decode a non-interlaced PNG (all colour types, bit depths 1-16).
+
+    ``max_pixels`` bounds ``width * height`` and is checked, together with the
+    expected scanline size, *before* decompression or any image-sized allocation.
+    """
     if not data.startswith(PNG_SIGNATURE):
         raise ValueError("not a PNG file")
     pos, header, palette, trns, idat = 8, None, None, None, []
@@ -130,14 +141,20 @@ def decode_png(data):
     if color == 3 and palette is None:
         raise ValueError("PNG: palette image without PLTE chunk")
 
+    _check_pixels(width, height, max_pixels)
     channels = _PNG_CHANNELS[color]
     bits_per_pixel = channels * depth
     stride = (width * bits_per_pixel + 7) // 8
+    expected = height * (stride + 1)
+    # Decompress at most one byte more than the scanlines need, so a zip bomb cannot expand.
+    inflater = zlib.decompressobj()
     try:
-        raw = zlib.decompress(b"".join(idat))
+        raw = inflater.decompress(b"".join(idat), expected + 1)
     except zlib.error as exc:
         raise ValueError(f"PNG: corrupt image data ({exc})") from None
-    if len(raw) < height * (stride + 1):
+    if len(raw) > expected or inflater.unconsumed_tail:
+        raise ValueError("PNG: decompressed data exceeds the size implied by the header")
+    if len(raw) < expected:
         raise ValueError("PNG: image data too short")
     rows = _unfilter(raw, height, stride, max(1, bits_per_pixel // 8))
 
@@ -190,7 +207,7 @@ def encode_png(img, level=6):
 
 # --------------------------------------------------------------------------- BMP
 
-def decode_bmp(data):
+def decode_bmp(data, max_pixels=DEFAULT_MAX_PIXELS):
     """Decode an uncompressed BMP (1/4/8-bit palette, 24-bit, 32-bit incl. bit fields)."""
     if data[:2] != b"BM" or len(data) < 26:
         raise ValueError("not a BMP file")
@@ -210,6 +227,7 @@ def decode_bmp(data):
     if bpp not in (1, 4, 8, 24, 32) or compression not in (0, 3) or (compression == 3 and bpp != 32):
         raise ValueError(f"BMP: unsupported format ({bpp}-bit, compression {compression})")
 
+    _check_pixels(width, height, max_pixels)
     row_size = (bpp * width + 31) // 32 * 4
     if offset + row_size * height > len(data):
         raise ValueError("BMP: pixel data truncated")
@@ -279,7 +297,7 @@ def encode_bmp(img):
 _PNM_TOKEN = re.compile(rb"\s*(?:#[^\n]*\n\s*)*(\S+)")
 
 
-def decode_pnm(data):
+def decode_pnm(data, max_pixels=DEFAULT_MAX_PIXELS):
     """Decode PGM/PPM: ASCII (P2, P3) or binary (P5, P6), maxval up to 65535."""
     magic = data[:2]
     if magic not in (b"P2", b"P3", b"P5", b"P6"):
@@ -294,6 +312,7 @@ def decode_pnm(data):
     width, height, maxval = header
     if width <= 0 or height <= 0 or not 0 < maxval < 65536:
         raise ValueError("PNM: invalid header values")
+    _check_pixels(width, height, max_pixels)
     channels = 3 if magic in (b"P3", b"P6") else 1
     count = width * height * channels
     if magic in (b"P5", b"P6"):
@@ -335,15 +354,19 @@ def encode_pnm(img):
 
 # --------------------------------------------------------------------------- dispatch
 
-def decode_image(data):
-    """Decode image bytes, detecting the format from its magic number."""
+def decode_image(data, max_pixels=DEFAULT_MAX_PIXELS):
+    """Decode image bytes, detecting the format from its magic number.
+
+    ``max_pixels`` is the largest ``width * height`` accepted; it is enforced from the
+    header, before decompression or allocation (``None`` disables the limit).
+    """
     data = bytes(data)
     if data.startswith(PNG_SIGNATURE):
-        return decode_png(data)
+        return decode_png(data, max_pixels)
     if data[:2] == b"BM":
-        return decode_bmp(data)
+        return decode_bmp(data, max_pixels)
     if data[:2] in (b"P2", b"P3", b"P5", b"P6"):
-        return decode_pnm(data)
+        return decode_pnm(data, max_pixels)
     raise ValueError("unsupported image format (supported: PNG, BMP, PGM/PPM)")
 
 
