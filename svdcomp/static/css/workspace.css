@@ -217,3 +217,11 @@
 .lab-charts { margin-top: 3rem; }
 @media (max-width: 1000px) { .lab-side { position: static; } }
 .lab-drop-col .lab-step, .lab-gallery-col .lab-step { justify-content: center; }
+
+/* ---------- summary strip: file facts and result numbers right above the stage and graphs ---------- */
+.lab-summary { display: grid; grid-template-columns: minmax(14rem, 19rem) minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 2.5rem); align-items: start;
+               padding: 1.25rem 0 1.75rem; border-bottom: 1px solid var(--rule); margin-bottom: 2rem; }
+.lab-summary .lab-meta { margin: 0; max-width: none; border-top: 0; padding-top: 0; }
+.lab-summary .lab-meta-notes { margin: .5rem 0 0; text-align: left; }
+.lab-summary .lab-results { margin-top: 0; border-top: 0; padding-top: 0; }
+@media (max-width: 1000px) { .lab-summary { grid-template-columns: minmax(0, 1fr); } }
