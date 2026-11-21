@@ -1,7 +1,6 @@
 """Browser end-to-end tests of SVD LAB (real Chrome/Chromium via Playwright)."""
 
 import io
-import json
 import pathlib
 import re
 
@@ -195,80 +194,7 @@ def test_adaptive_blocks_and_heatmap(session):
     expect(page.locator("#heat-caption")).not_to_be_empty()
 
 
-# ------------------------------------------------------------------ the 2x2 example
-
-EXPECTED = {
-    "w-ata": [[10, 6], [6, 10]], "w-eigenvalues": [16, 4], "w-sigma": [4, 2], "w-Sigma": [[4, 0], [0, 2]],
-    "w-verify": [[3, 1], [1, 3]], "w-A1": [[2, 2], [2, 2]], "w-residual": [[1, -1], [-1, 1]],
-    "w-term2": [[1, -1], [-1, 1]], "w-frob": 2, "w-normA": 20, "w-energy": 0.8, "w-storage": 5,
-}
-
-
-def test_worked_example_numbers_match_independent_calculation(session):
-    s = session()
-    page = s.page
-    for name, want in EXPECTED.items():
-        got = json.loads(tid(page, name).first.get_attribute("data-value"))
-        np.testing.assert_allclose(got, want, atol=1e-9, err_msg=name)
-    h = 1 / np.sqrt(2)
-    for name in ("w-U", "w-Vt", "w-V"):
-        np.testing.assert_allclose(json.loads(tid(page, name).first.get_attribute("data-value")),
-                                   [[h, h], [h, -h]], atol=1e-12)
-    # independent check of the algebra itself
-    A = np.array([[3, 1], [1, 3]])
-    assert sorted(np.round(np.linalg.eigvalsh(A.T @ A)).tolist()) == [4, 16]
-    tid(page, "w-engine-check").click()
-    expect(tid(page, "w-engine-status")).to_contain_text("agrees", timeout=10000)
-
-
-def test_worked_example_stepper_and_board_mode(session):
-    s = session()
-    page = s.page
-    tid(page, "w-reset").click()
-    tid(page, "w-next").click()
-    tid(page, "w-next").click()
-    tid(page, "w-back").click()
-    tid(page, "w-reveal").click()
-    tid(page, "w-board").click()
-    expect(page.locator("#w-step-1")).to_be_visible()
-    page.keyboard.press("Escape")
-    assert s.errors == []
-
-
-def test_detail_switch_changes_content(session):
-    s = session()
-    page = s.page
-    assert page.locator("body").get_attribute("data-detail") == "simple"
-    page.click("#btn-detail")
-    assert page.locator("body").get_attribute("data-detail") == "details"
-    assert page.locator(".only-details:visible").count() > 0
-    page.click("#btn-detail")
-    assert page.locator(".only-details:visible").count() == 0
-
-
-def test_learning_chapters_in_order(session):
-    s = session()
-    page = s.page
-    assert page.locator("article.lj-ch").count() == 15
-    for n, article in enumerate(page.locator("article.lj-ch").all(), start=1):
-        assert article.get_attribute("id") == f"ch-{n}"
-
-
-# ------------------------------------------------------------------ presentation, offline, layout
-
-def test_presentation_mode_and_guided_tour(session):
-    s = session()
-    page = s.page
-    page.click("#btn-present")
-    expect(page.locator("body")).to_have_class(re.compile("presenting"))
-    expect(tid(page, "tour-panel")).to_be_visible()
-    expect(tid(page, "tour-step")).to_contain_text("Step 1 of 10")
-    for _ in range(9):
-        tid(page, "tour-next").click()
-    expect(tid(page, "tour-step")).to_contain_text("Step 10 of 10")
-    expect(tid(page, "tour-next")).to_be_disabled()
-    tid(page, "present-exit").click()
-    expect(page.locator("body")).not_to_have_class(re.compile("presenting"))
+# ------------------------------------------------------------------ offline, layout
 
 
 def test_fully_offline_no_external_requests(session):
@@ -289,9 +215,7 @@ def test_no_horizontal_overflow_and_screenshots(session, width, height):
     s = session(viewport={"width": width, "height": height})
     page = s.page
     ARTIFACTS.mkdir(exist_ok=True)
-    for detail in (False, True):
-        if detail:
-            page.click("#btn-detail")
+    for detail in (False,):
         over = page.evaluate("""() => {
             const w = document.documentElement.clientWidth;
             return [...document.querySelectorAll('main section, header, footer')]
@@ -328,9 +252,5 @@ def test_acceptance_run_through(session, tmp_path):
     page.reload()
     load_sample(page, "tiny-face")
     compute_svd(page, "exact")
-    page.click("#btn-present")
-    expect(page.locator("body")).to_have_class(re.compile("presenting"))
-    ARTIFACTS.mkdir(exist_ok=True)
-    page.screenshot(path=str(ARTIFACTS / "acceptance-presentation.png"))
     assert [e for e in s.errors] == []
     assert s.external == []

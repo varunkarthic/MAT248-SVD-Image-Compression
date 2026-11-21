@@ -8,8 +8,6 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231f4ea3'/%3E%3Cpath d='M6 22h20M6 16h14M6 10h8' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/intro.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/learn.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/scenes.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
 </head>
 <body data-detail="simple">
@@ -21,18 +19,8 @@
 <header class="site-header">
   <div class="wrap">
     <a class="wordmark" href="#top" aria-label="SVD LAB, back to top">SVD<span>·</span>LAB</a>
-    <nav class="site-nav" aria-label="Sections">
-      <a href="#learn">Learn</a>
-      <a href="#worked">2×2 example</a>
-      <a href="#lab">Laboratory</a>
-      <a href="#math">Mathematics</a>
-      <a href="#finale">Summary</a>
-    </nav>
     <div class="toolbar" role="toolbar" aria-label="Display options">
-      <button class="btn btn--quiet" id="btn-detail" type="button" aria-pressed="false"
-              title="Switch between the simple explanation and the full mathematical details">Details: off</button>
       <button class="btn btn--quiet" id="btn-replay" type="button">Replay intro</button>
-      <button class="btn" id="btn-present" type="button" aria-pressed="false">Presentation mode</button>
     </div>
   </div>
 </header>
@@ -43,22 +31,13 @@
     <p class="eyebrow">MAT248 · Linear Algebra project</p>
     <h1 id="hero-title">SVD<span> LAB</span></h1>
     <p class="subtitle">See how linear algebra rebuilds an image, one singular component at a time.</p>
-    <p class="lede">An image is a matrix. The singular value decomposition splits that matrix into ranked layers, and
-      keeping only the strongest layers gives the best possible lower-rank picture. Everything below is computed by a
-      singular value decomposition written from scratch for this project.</p>
+    <p class="lede">Pick an image, compute its singular value decomposition, and watch it rebuilt one rank at a time.</p>
     <div class="actions">
       <a class="btn btn--primary" href="#lab">Open the laboratory</a>
-      <a class="btn" href="#learn">Start from the basics</a>
-      <a class="btn" href="#worked">The 2×2 calculation</a>
     </div>
   </section>
 
-  {% include "_learn.html" %}
-  {% include "_scenes.html" %}
-  {% include "_worked.html" %}
   {% include "_lab.html" %}
-  {% include "_math.html" %}
-  {% include "_finale.html" %}
 </main>
 
 <footer class="site-footer">

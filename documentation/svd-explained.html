@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SVD image compression, explained simply</title>
+<style>
+  @page { size: A4; margin: 18mm 17mm; }
+  body { font: 11.5pt/1.5 "Segoe UI", Arial, sans-serif; color: #1c1e23; }
+  h1 { font: 700 25pt Georgia, serif; margin: 0 0 2mm; } h1 span { color: #1f4ea3; }
+  h2 { font: 700 15pt Georgia, serif; color: #1f4ea3; margin: 8mm 0 2mm; border-bottom: 1px solid #ccc; padding-bottom: 1mm; page-break-after: avoid; }
+  p { margin: 0 0 2.5mm; } .sub { font-style: italic; color: #555; margin-bottom: 5mm; }
+  .box { border-left: 3px solid #1f4ea3; background: #eef2fa; padding: 2.5mm 4mm; margin: 3mm 0; page-break-inside: avoid; }
+  .eq { font: 12pt Cambria, "Times New Roman", serif; text-align: center; margin: 3mm 0; }
+  table.m { display: inline-table; border-left: 1.5px solid #000; border-right: 1.5px solid #000; border-radius: 3px; margin: 0 2mm; vertical-align: middle; font: 11pt Consolas, monospace; }
+  table.m td { padding: 0.5mm 3mm; text-align: right; }
+  .row { text-align: center; margin: 3mm 0; page-break-inside: avoid; }
+  ol, ul { margin: 0 0 3mm 5mm; padding-left: 4mm; } li { margin-bottom: 1.2mm; }
+  .q { font-weight: 600; margin: 3mm 0 0.5mm; } .small { font-size: 9.5pt; color: #555; }
+</style></head><body>
+
+<h1>SVD <span>LAB</span></h1>
+<p class="sub">Image compression with the Singular Value Decomposition: a simple guide for MAT248</p>
+
+<h2>1. An image is a matrix</h2>
+<p>A grey picture is a grid of tiny squares (pixels). Each pixel has a brightness from 0 (black) to 255 (white). Write those brightness numbers in rows and columns and you have a <b>matrix</b> <i>A</i> with <i>m</i> rows and <i>n</i> columns. A colour picture is three such matrices: red, green and blue. We treat each one separately.</p>
+<div class="row"><table class="m"><tr><td>12</td><td>40</td><td>200</td></tr><tr><td>15</td><td>45</td><td>210</td></tr></table> &nbsp;= a 2 × 3 picture (2 rows, 3 columns)</div>
+
+<h2>2. The tools we need</h2>
+<ul>
+<li><b>Matrix multiplication:</b> entry (<i>i</i>, <i>j</i>) of <i>AB</i> = (row <i>i</i> of <i>A</i>) · (column <i>j</i> of <i>B</i>). Example: row (3, 1) times column (1, 1) = 3·1 + 1·1 = 4.</li>
+<li><b>Vector:</b> a list of numbers, e.g. a column of the matrix.</li>
+<li><b>Transpose</b> <i>A</i><sup>T</sup>: swap rows and columns.</li>
+<li><b>Rank:</b> the number of independent rows (or columns). If one row is just a multiple of another it adds no new information. Rank 1 means "one pattern repeated".</li>
+<li><b>Eigenvector:</b> a direction that a matrix only stretches: <i>Av</i> = λ<i>v</i>. The stretch factor λ is the <b>eigenvalue</b>.</li>
+</ul>
+
+<h2>3. The Singular Value Decomposition (SVD)</h2>
+<p>Every matrix can be written as</p>
+<div class="eq"><i>A</i> = <i>U</i> Σ <i>V</i><sup>T</sup></div>
+<ul>
+<li><b><i>U</i></b> and <b><i>V</i></b>: matrices whose columns are perpendicular unit vectors (rotations/reflections). Their columns are <i>u</i><sub>1</sub>, <i>u</i><sub>2</sub>, … and <i>v</i><sub>1</sub>, <i>v</i><sub>2</sub>, …</li>
+<li><b>Σ</b>: a diagonal matrix of <b>singular values</b> σ<sub>1</sub> ≥ σ<sub>2</sub> ≥ … ≥ 0. They say how important each pattern is.</li>
+<li>The σ<sub>i</sub> are the square roots of the eigenvalues of <i>A</i><sup>T</sup><i>A</i>; the <i>v</i><sub>i</sub> are its eigenvectors; <i>u</i><sub>i</sub> = <i>A v</i><sub>i</sub> / σ<sub>i</sub>.</li>
+</ul>
+<p>The same thing as a sum of simple layers (each layer is a rank-1 matrix):</p>
+<div class="eq"><i>A</i> = σ<sub>1</sub><i>u</i><sub>1</sub><i>v</i><sub>1</sub><sup>T</sup> + σ<sub>2</sub><i>u</i><sub>2</sub><i>v</i><sub>2</sub><sup>T</sup> + σ<sub>3</sub><i>u</i><sub>3</sub><i>v</i><sub>3</sub><sup>T</sup> + …</div>
+
+<h2>4. Worked example (do this on the board)</h2>
+<div class="row"><i>A</i> = <table class="m"><tr><td>3</td><td>1</td></tr><tr><td>1</td><td>3</td></tr></table></div>
+<ol>
+<li><b>A<sup>T</sup>A</b> = <table class="m"><tr><td>10</td><td>6</td></tr><tr><td>6</td><td>10</td></tr></table> (e.g. 3·3 + 1·1 = 10 and 3·1 + 1·3 = 6).</li>
+<li><b>Eigenvalues:</b> det(A<sup>T</sup>A − λI) = (10 − λ)² − 36 = λ² − 20λ + 64 = (λ − 16)(λ − 4). So λ = 16 and λ = 4.</li>
+<li><b>Eigenvectors:</b> for 16: −6x + 6y = 0 → (1, 1)/√2. For 4: 6x + 6y = 0 → (1, −1)/√2. These are <i>v</i><sub>1</sub>, <i>v</i><sub>2</sub>.</li>
+<li><b>Singular values:</b> σ<sub>1</sub> = √16 = <b>4</b>, σ<sub>2</sub> = √4 = <b>2</b>.</li>
+<li><b>U:</b> <i>u</i><sub>1</sub> = <i>A v</i><sub>1</sub>/4 = (4, 4)/√2 / 4 = (1, 1)/√2; <i>u</i><sub>2</sub> = <i>A v</i><sub>2</sub>/2 = (2, −2)/√2 / 2 = (1, −1)/√2. So
+ <i>U</i> = <i>V</i> = (1/√2)<table class="m"><tr><td>1</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr></table>, Σ = <table class="m"><tr><td>4</td><td>0</td></tr><tr><td>0</td><td>2</td></tr></table></li>
+<li><b>Check:</b> <i>U</i>Σ = (1/√2)[[4, 2], [4, −2]]; times <i>V</i><sup>T</sup> gives ½[[6, 2], [2, 6]] = [[3, 1], [1, 3]] = <i>A</i> ✓</li>
+<li><b>Rank 1:</b> <i>A</i><sub>1</sub> = σ<sub>1</sub><i>u</i><sub>1</sub><i>v</i><sub>1</sub><sup>T</sup> = 4 · ½[[1, 1], [1, 1]] = <table class="m"><tr><td>2</td><td>2</td></tr><tr><td>2</td><td>2</td></tr></table></li>
+<li><b>Error:</b> <i>A</i> − <i>A</i><sub>1</sub> = [[1, −1], [−1, 1]], and its size ‖·‖<sub>F</sub> = √(1+1+1+1) = <b>2</b> (= σ<sub>2</sub>).</li>
+<li><b>Energy kept:</b> ‖A‖<sub>F</sub>² = 9+1+1+9 = 20 = 16 + 4, so rank 1 keeps 16/20 = <b>80 %</b>.</li>
+<li><b>Rank 2:</b> add σ<sub>2</sub><i>u</i><sub>2</sub><i>v</i><sub>2</sub><sup>T</sup> = [[1, −1], [−1, 1]] and we get <i>A</i> back exactly (100 %).</li>
+</ol>
+<div class="box">Only for teaching: storing the rank-1 factors takes 5 numbers, more than the 4 entries of <i>A</i>. Savings appear only for big images.</div>
+
+<h2>5. Why this compresses an image</h2>
+<p>Keep only the first <i>k</i> layers: <i>A</i><sub>k</sub> = σ<sub>1</sub><i>u</i><sub>1</sub><i>v</i><sub>1</sub><sup>T</sup> + … + σ<sub>k</sub><i>u</i><sub>k</sub><i>v</i><sub>k</sub><sup>T</sup>. Because the σ's are sorted, the layers we keep are the most important ones. More layers means more detail.</p>
+<div class="box"><b>Eckart–Young–Mirsky theorem:</b> among all matrices of rank at most <i>k</i>, <i>A</i><sub>k</sub> is the closest to <i>A</i> (in the Frobenius norm and the 2-norm). The error is ‖<i>A</i> − <i>A</i><sub>k</sub>‖<sub>F</sub>² = σ<sub>k+1</sub>² + σ<sub>k+2</sub>² + …</div>
+<ul>
+<li><b>Energy kept:</b> E(k) = (σ<sub>1</sub>² + … + σ<sub>k</sub>²) / (σ<sub>1</sub>² + σ<sub>2</sub>² + …).</li>
+<li><b>Numbers to store:</b> k(m + n + 1) per colour channel, instead of m·n. For 256 × 256 and k = 20 that is 10 260 instead of 65 536.</li>
+<li><b>Quality:</b> MSE (average squared error), PSNR = 10 log<sub>10</sub>(255² / MSE) in dB (higher is better), SSIM (closer to 1 is better).</li>
+</ul>
+
+<h2>6. What the demo shows</h2>
+<ol>
+<li>Choose a sample image (or upload your own) and press <b>Compute SVD</b>. <i>Exact</i> = full Jacobi SVD; <i>Randomized</i> = a faster approximation of the leading layers.</li>
+<li>Press <b>Play</b>: each picture is a real rank-<i>k</i> reconstruction, from rank 1 upwards. The rank, charts, energy and error all change together.</li>
+<li>Drag the divider to compare with the original; type any rank; open <b>Show component</b> to see one layer σ<sub>i</sub>u<sub>i</sub>v<sub>i</sub><sup>T</sup> (blue = negative, red = positive).</li>
+<li>Try <b>Checkerboard</b> (rank 2: two layers are enough) versus <b>Complex texture</b> (many layers needed).</li>
+<li><b>Adaptive blocks</b>: the image is cut into tiles; detailed tiles get more rank.</li>
+</ol>
+
+<h2>7. Honest limits</h2>
+<ul>
+<li>k(m+n+1) is a <i>count of numbers</i>, not a file size. A reconstruction saved as PNG is just an image.</li>
+<li>JPEG and WebP usually give smaller files than plain SVD.</li>
+<li>Randomized SVD is an approximation; it is not guaranteed to equal the best rank-<i>k</i> matrix.</li>
+<li>Error before rounding to 8-bit pixels (exact mathematics) is slightly different from error measured on the final picture.</li>
+</ul>
+
+<h2>8. Likely questions</h2>
+<p class="q">Why σ = √(eigenvalue of AᵀA)?</p><p>Because AᵀA = V Σ² Vᵀ, so its eigenvalues are σ².</p>
+<p class="q">Why are the singular values sorted?</p><p>So that keeping the first <i>k</i> layers keeps the biggest ones, which minimises the error (Eckart–Young).</p>
+<p class="q">Is the SVD unique?</p><p>The singular values are; the vectors are unique only up to sign (and rotation if values repeat).</p>
+<p class="q">Why do colour images need three SVDs?</p><p>R, G and B are three separate matrices; we decompose each.</p>
+<p class="q">Why can randomized SVD be faster?</p><p>It compresses <i>A</i> with a random matrix first, then does an SVD of a small matrix: roughly O(mnk) work.</p>
+
+<p class="small" style="margin-top:6mm">Reference: https://arxiv.org/html/2512.16226v1 · Run the demo with <code>svdcomp-web</code> and open http://127.0.0.1:5000</p>
+</body></html>
