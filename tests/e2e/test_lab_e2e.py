@@ -263,7 +263,7 @@ def test_intro_plays_again_when_an_image_is_loaded(session):
     expect(tid(page, "intro-overlay")).to_be_hidden()
     tid(page, "sample-tiny-face").click()
     expect(tid(page, "intro-overlay")).to_be_visible()
-    expect(page.locator("#intro-tag")).to_contain_text("Analysing")
+    expect(page.locator("#intro")).to_have_attribute("data-mode", "upload")
     tid(page, "intro-skip").click()
     expect(tid(page, "intro-overlay")).to_be_hidden()
     expect(page.locator("#image-meta")).to_be_visible()

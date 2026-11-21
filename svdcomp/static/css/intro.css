@@ -27,3 +27,7 @@ body.intro-lock { overflow: hidden; }
 .intro__brand span { color: #8fb0ee; }
 .intro.is-static .intro__brand { display: block; }
 .intro.is-static .intro__title { place-content: center; padding-bottom: 0; }
+.intro__note { display: none; }
+.intro[data-mode="upload"] .intro__note { display: block; }
+.intro[data-mode="upload"] .intro__brand { display: block; }
+.intro[data-mode="upload"] .intro__title { place-content: center; padding-bottom: 0; }

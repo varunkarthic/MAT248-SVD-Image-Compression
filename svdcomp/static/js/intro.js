@@ -1,8 +1,10 @@
-/* Pixel intro (about 3.6 s). A field of grey pixels drifts in, then organises itself into the letters S, V, D,
- * and the overlay fades to reveal the page. Also played when an image is loaded ("upload" mode).
+/* Site opening (about 4 s): a field of grey pixels drifts in, then organises itself into the letters S, V, D,
+ * and the overlay fades to reveal the page. While an image is being loaded ("upload" mode) the older
+ * matrix / U Sigma V^T / rank-k rebuild animation from anim/processing.js plays instead.
  * Canvas 2D, deterministic, no network, no SVD in the browser. */
 import { $, on, reducedMotion } from "./core.js";
 import { createPlayer, lerp, seg } from "./anim/player.js";
+import { drawProcessing, PROCESSING_DURATION } from "./anim/processing.js";
 
 const W = 640, H = 360;
 const DURATION = 4.0, FADE_MS = 450;
@@ -104,7 +106,8 @@ function finish() {
 export function playIntro({ force = false, mode = "intro" } = {}) {
   if (!overlay) return;
   curMode = mode;
-  tagEl.textContent = mode === "upload" ? "Analysing your image…" : TAG;
+  overlay.dataset.mode = mode;
+  tagEl.textContent = TAG;
   if (active) return; // already playing (the page underneath is inert)
   const reduced = reducedMotion();
   if (reduced && !force) return;
@@ -136,9 +139,10 @@ export function playIntro({ force = false, mode = "intro" } = {}) {
   overlay.classList.remove("is-static");
   titleEl.classList.remove("is-on");
   draw(ctx, 0);
+  const scene = mode === "upload" ? drawProcessing : draw;
   player = createPlayer({
-    duration: DURATION,
-    onFrame: (t) => { draw(ctx, t); if (t >= 2.9) titleEl.classList.add("is-on"); },
+    duration: mode === "upload" ? PROCESSING_DURATION : DURATION,
+    onFrame: (t) => { scene(ctx, t); if (t >= 2.9) titleEl.classList.add("is-on"); },
     onState: (s) => { if (s === "ended") endTimer = setTimeout(finish, 150); },
   });
   player.play();
