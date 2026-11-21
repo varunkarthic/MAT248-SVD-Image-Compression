@@ -53,7 +53,7 @@ hr, .rule { border: 0; border-top: 1px solid var(--rule); margin: 2rem 0; }
 .skip-link:focus { top: .5rem; }
 
 /* ---------- buttons and form controls ---------- */
-.btn { font: 600 var(--step--1)/1 var(--font-body); letter-spacing: .02em; padding: .75rem 1.1rem; min-height: 2.75rem;
+.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font: 600 var(--step--1)/1 var(--font-body); letter-spacing: .02em; padding: .75rem 1.1rem; min-height: 2.75rem;
        border: 1.5px solid var(--ink); background: transparent; color: var(--ink); border-radius: var(--radius);
        cursor: pointer; transition: background .15s var(--ease), color .15s var(--ease), transform .15s var(--ease); }
 .btn:hover:not(:disabled) { background: var(--ink); color: var(--paper); }

@@ -18,3 +18,39 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
       - run: pytest -q
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[e2e]"
+      - run: playwright install --with-deps chromium
+      - run: pytest tests/e2e -q -ra
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: tests/e2e/artifacts
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip wheel . --no-deps -w dist
+      - name: wheel contains the web assets
+        run: |
+          python - <<'PY'
+          import glob, zipfile
+          names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
+          need = ["svdcomp/templates/index.html", "svdcomp/static/css/base.css", "svdcomp/static/js/main.js",
+                  "svdcomp/demo_assets/manifest.json", "svdcomp/demo_assets/samples/gradient.png"]
+          missing = [n for n in need if n not in names]
+          assert not missing, missing
+          print(len(names), "files; web assets present")
+          PY

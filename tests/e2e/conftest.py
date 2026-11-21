@@ -58,6 +58,7 @@ class Session:
         self.page.on("request", lambda r: self.external.append(r.url)
                      if not r.url.startswith((base_url, "data:", "blob:", "about:")) else None)
         self.page.goto(base_url + ("/" if intro else "/?intro=0"))
+        self.page.wait_for_selector("body[data-ready]", state="attached")
 
     def close(self):
         self.context.close()

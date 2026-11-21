@@ -5,14 +5,13 @@ import { $, $$, emit, on } from "./core.js";
 const MODULES = ["intro", "learn", "scenes", "worked", "workspace", "finale", "present"];
 const loaded = {};
 
-for (const name of MODULES) {
-  try {
-    loaded[name] = await import(`./${name}.js`);
-    loaded[name].init?.();
-  } catch (err) {
-    console.error(`SVD LAB: module "${name}" failed to load`, err);
-  }
-}
+// Fetch every module in parallel (faster start-up), then initialise in page order.
+const imports = await Promise.allSettled(MODULES.map((name) => import(`./${name}.js`)));
+imports.forEach((res, i) => {
+  if (res.status === "rejected") { console.error(`SVD LAB: module "${MODULES[i]}" failed to load`, res.reason); return; }
+  loaded[MODULES[i]] = res.value;
+  try { res.value.init?.(); } catch (err) { console.error(`SVD LAB: module "${MODULES[i]}" failed to start`, err); }
+});
 
 // ---- simple / details ----
 const detailBtn = $("#btn-detail");
@@ -42,3 +41,5 @@ const observer = new IntersectionObserver((entries) => {
 $$("main > section[id]").forEach((s) => observer.observe(s));
 
 on("ui:section", (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+
+document.body.dataset.ready = "1";   // controls are wired; tests and slow machines can wait for this

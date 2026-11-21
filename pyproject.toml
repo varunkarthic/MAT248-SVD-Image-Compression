@@ -25,7 +25,7 @@ svdcomp-web = "svdcomp.web:main"
 packages = ["svdcomp"]
 
 [tool.setuptools.package-data]
-svdcomp = ["templates/*.html", "static/css/*.css", "static/js/*.js", "static/img/*", "demo_assets/manifest.json", "demo_assets/README.md", "demo_assets/samples/*.png"]
+svdcomp = ["templates/*.html", "static/css/*.css", "static/js/*.js", "static/js/*/*.js", "static/img/*", "demo_assets/manifest.json", "demo_assets/README.md", "demo_assets/samples/*.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

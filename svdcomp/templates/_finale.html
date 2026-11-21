@@ -1,1 +1,66 @@
-<!-- finale: placeholder -->
+<section class="chapter" id="finale" aria-labelledby="finale-title">
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">Summary</p>
+      <h2 id="finale-title">From a picture to a few numbers and back</h2>
+      <p class="lede-sm">Five stations, left to right. When you have computed an image in the laboratory this sequence shows
+        your real image, rank and error; until then it shows the bundled sample and says clearly what is still missing.</p>
+    </header>
+
+    <div class="sc-controls">
+      <button class="btn btn--primary" type="button" id="finale-play" data-testid="finale-play">Play</button>
+      <span class="sc-status mono" id="finale-status" role="status" aria-live="polite"></span>
+    </div>
+
+    <ol class="fn-stations" id="finale-stations">
+      <li class="fn-st" data-st="1">
+        <p class="fn-st__n mono">1 &middot; Original image</p>
+        <div class="fn-st__body"><img class="fn-img" id="fn-original" alt="Original image" width="160" height="160"></div>
+        <p class="fn-st__cap" id="fn-original-cap"></p>
+      </li>
+      <li class="fn-st" data-st="2">
+        <p class="fn-st__n mono">2 &middot; Matrix of numbers</p>
+        <div class="fn-st__body"><div class="matrix fn-matrix" id="fn-matrix" role="img" aria-label="Top-left 6 by 6 block of gray values"></div></div>
+        <p class="fn-st__cap" id="fn-matrix-cap"></p>
+      </li>
+      <li class="fn-st" data-st="3">
+        <p class="fn-st__n mono">3 &middot; SVD</p>
+        <div class="fn-st__body">
+          <math display="block"><mi>A</mi><mo>=</mo><mi>U</mi><mi mathvariant="normal">&Sigma;</mi><msup><mi>V</mi><mi>T</mi></msup></math>
+        </div>
+        <p class="fn-st__cap" id="fn-svd-cap"></p>
+      </li>
+      <li class="fn-st" data-st="4">
+        <p class="fn-st__n mono">4 &middot; Rank-<em>k</em> approximation</p>
+        <div class="fn-st__body">
+          <math display="block"><msub><mi>A</mi><mi>k</mi></msub><mo>=</mo><munderover><mo>&sum;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover>
+            <msub><mi>&sigma;</mi><mi>i</mi></msub><msub><mi mathvariant="bold">u</mi><mi>i</mi></msub><msubsup><mi mathvariant="bold">v</mi><mi>i</mi><mi>T</mi></msubsup></math>
+        </div>
+        <p class="fn-st__cap" id="fn-rank-cap"></p>
+      </li>
+      <li class="fn-st" data-st="5">
+        <p class="fn-st__n mono">5 &middot; Reconstructed image</p>
+        <div class="fn-st__body"><img class="fn-img" id="fn-recon" alt="" width="160" height="160" hidden>
+          <p class="fn-empty" id="fn-recon-empty">Not computed yet</p></div>
+        <p class="fn-st__cap" id="fn-recon-cap"></p>
+      </li>
+    </ol>
+    <p class="note fn-prompt" id="fn-prompt">Load and compute an image in the laboratory to see the real rank-<em>k</em> result here.
+      <a href="#lab">Go to the laboratory</a></p>
+
+    <p class="fn-message" id="finale-message" data-testid="finale-message">Image compression through the power of Linear Algebra.</p>
+
+    <section class="fn-limits" aria-labelledby="fn-limits-title">
+      <h3 id="fn-limits-title">What we showed, and its limits</h3>
+      <ul>
+        <li>The rank-<em>k</em> truncation is the best rank-<em>k</em> approximation in the Frobenius norm (Eckart&ndash;Young&ndash;Mirsky).</li>
+        <li>Storing <em>k</em>(<em>m</em>+<em>n</em>+1) numbers instead of <em>mn</em> counts scalars; it is not a file size, because
+          real files also store the numbers' precision and format overhead.</li>
+        <li>Modern codecs such as JPEG and WebP often beat plain SVD at the same visual quality.</li>
+        <li>Randomized SVD is an approximation of the exact decomposition, faster for large matrices.</li>
+        <li>Adaptive blocks trade extra complexity for better local detail.</li>
+      </ul>
+      <p><a class="btn" href="#lab">Back to the laboratory</a></p>
+    </section>
+  </div>
+</section>

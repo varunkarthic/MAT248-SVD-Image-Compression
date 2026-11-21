@@ -1,1 +1,240 @@
-<!-- lab: placeholder -->
+<section class="chapter" id="lab" aria-labelledby="lab-h">
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">Interactive workspace</p>
+      <h2 id="lab-h">The laboratory</h2>
+      <p class="lab-lede">Choose an image, compute its singular value decomposition, then rebuild the picture one rank at a time.
+        Every number and picture below is computed by the project's own SVD running on this machine.</p>
+    </header>
+
+    {# ---------------- A. choose an image ---------------- #}
+    <div class="lab-input" id="lab-input">
+      <div class="lab-drop-col">
+        <h3 class="lab-step"><span class="lab-step-no">A</span> Choose an image</h3>
+        <label class="lab-drop" id="dropzone" for="file-input" data-testid="dropzone">
+          <input class="sr-only-input" type="file" id="file-input" data-testid="file-input"
+                 accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/bmp,.pgm,.ppm,.pnm,.pbm">
+          <span class="lab-drop-title">Drop an image here, or click to browse</span>
+          <span class="lab-drop-hint">PNG, BMP, PGM, PPM, PNM go straight to the SVD. JPEG, WebP, GIF, AVIF are converted to PNG in your browser first.
+            Nothing leaves this computer.</span>
+        </label>
+        <div class="lab-input-row">
+          <button class="btn btn--quiet" type="button" id="btn-clear-file" data-testid="btn-clear-file" hidden>Clear selection</button>
+          <p class="lab-busy" id="lab-busy" role="status" aria-live="polite" data-testid="lab-busy"></p>
+        </div>
+        <div class="lab-error" id="lab-error" role="alert" data-testid="lab-error" hidden></div>
+        <dl class="lab-meta" id="image-meta" data-testid="image-meta" hidden></dl>
+        <p class="lab-meta-notes" id="image-notes" data-testid="image-notes" hidden></p>
+      </div>
+      <div class="lab-gallery-col">
+        <h3 class="lab-step"><span class="lab-step-no">B</span> Or start from a sample</h3>
+        <div id="gallery" class="lab-gallery" data-testid="gallery" aria-label="Sample images">
+          <p class="muted">Loading samples…</p>
+        </div>
+      </div>
+    </div>
+
+    {# ---------------- analysis (hidden until an image exists) ---------------- #}
+    <div class="lab-analysis" id="lab-analysis" data-testid="lab-analysis" hidden>
+      <div class="lab-tabs" role="tablist" aria-label="Compression method">
+        <button role="tab" id="tab-global" data-testid="tab-global" aria-selected="true" aria-controls="panel-global" type="button">Global SVD</button>
+        <button role="tab" id="tab-blocks" data-testid="tab-blocks" aria-selected="false" aria-controls="panel-blocks" tabindex="-1" type="button">Adaptive blocks</button>
+      </div>
+
+      <div class="lab-grid">
+        {# ---- the stage: the image is the hero ---- #}
+        <div class="lab-stage" id="lab-stage" data-testid="lab-stage">
+          <div class="lab-stage-bar">
+            <p class="lab-fig"><strong>Fig. 1</strong> <span id="stage-title">Original image</span></p>
+            <div class="lab-stage-tools">
+              <label class="lab-check"><input type="checkbox" id="side-by-side" data-testid="side-by-side"> Side by side</label>
+              <label class="lab-check"><input type="checkbox" id="show-diff" data-testid="show-diff"> Show error image</label>
+              <button class="btn btn--quiet" type="button" id="btn-fullscreen" data-testid="btn-fullscreen">Fullscreen</button>
+              <button class="btn" type="button" id="btn-download" data-testid="btn-download" disabled>Download PNG</button>
+              <button class="btn btn--quiet" type="button" id="btn-reset" data-testid="btn-reset">Reset image</button>
+            </div>
+          </div>
+
+          <div id="compare" class="cmp" data-testid="compare" data-mode="overlay">
+            <div class="cmp-frame" id="compare-frame">
+              <div class="cmp-view" id="compare-view" tabindex="0"
+                   aria-label="Image stage. Left of the divider: original. Right: reconstruction. Space plays or pauses, arrow keys change the rank.">
+                <img id="compare-original" data-testid="compare-original" class="cmp-img cmp-original" alt="Original image" draggable="false">
+                <img id="compare-recon" data-testid="compare-recon" class="cmp-img cmp-recon" alt="Reconstruction" draggable="false">
+                <span class="cmp-tag cmp-tag--l" id="tag-original">Original</span>
+                <span class="cmp-tag cmp-tag--r" id="tag-recon" hidden>Reconstruction</span>
+                <div id="compare-handle" class="cmp-handle" role="slider" tabindex="0" data-testid="compare-handle"
+                     aria-label="Before and after divider" aria-orientation="horizontal"
+                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="50 percent original on the left">
+                  <span class="cmp-grip" aria-hidden="true"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <figure class="lab-diff" id="diff-figure" hidden>
+            <img id="compare-diff" data-testid="compare-diff" alt="Absolute pixel error between original and reconstruction" draggable="false">
+            <figcaption id="diff-caption" class="muted"></figcaption>
+          </figure>
+
+          <p class="lab-stage-status" id="stage-status" role="status" aria-live="polite" data-testid="stage-status"></p>
+
+          {# ---- transport ---- #}
+          <fieldset class="lab-transport" id="transport" disabled>
+            <legend class="sr-only">Rank controls</legend>
+            <div class="lab-rank-line">
+              <label class="lab-rank-label" for="rank-slider">Rank <i>k</i></label>
+              <input type="range" id="rank-slider" data-testid="rank-slider" min="1" max="1" step="1" value="1" aria-describedby="rank-hint">
+              <label class="sr-only" for="rank-input">Exact rank</label>
+              <input type="number" id="rank-input" data-testid="rank-input" min="1" max="1" step="1" value="1" inputmode="numeric">
+              <span class="lab-rank-of mono" id="rank-of">/ 1</span>
+            </div>
+            <p class="lab-rank-hint muted secondary" id="rank-hint">Arrow keys change k by 1, Shift+arrows by 10, Home and End jump to the ends.</p>
+            <div class="lab-buttons">
+              <button class="btn" type="button" id="btn-prev" data-testid="btn-prev" aria-label="Previous rank">&#9664; Prev</button>
+              <button class="btn btn--primary" type="button" id="btn-play" data-testid="btn-play" aria-pressed="false">Play</button>
+              <button class="btn" type="button" id="btn-next" data-testid="btn-next" aria-label="Next rank">Next &#9654;</button>
+              <button class="btn btn--quiet" type="button" id="btn-restart" data-testid="btn-restart">Restart</button>
+              <label class="lab-speed">Speed
+                <select id="speed" data-testid="speed">
+                  <option value="0.5">0.5×</option><option value="1" selected>1×</option>
+                  <option value="2">2×</option><option value="4">4×</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="lab-equation" id="equation-wrap">
+            <div class="eq" id="equation" data-testid="equation" aria-live="off"></div>
+            <p class="lab-eq-sub mono" id="equation-sigma" data-testid="equation-sigma"></p>
+          </div>
+        </div>
+
+        {# ---- side column: settings (secondary) ---- #}
+        <div class="lab-side">
+          <div class="lab-panel" id="panel-global" role="tabpanel" aria-labelledby="tab-global">
+            <h3 class="lab-step"><span class="lab-step-no">C</span> Compute the SVD</h3>
+            <div class="lab-controls">
+              <label class="field">Method
+                <select id="method" data-testid="method">
+                  <option value="randomized">Randomized: fast, leading triplets</option>
+                  <option value="exact">Exact: Jacobi, full spectrum</option>
+                </select>
+              </label>
+              <p class="muted lab-method-note" id="method-note"></p>
+              <label class="field" id="rank-budget-field">Rank budget (randomized only)
+                <input type="number" id="rank-budget" data-testid="rank-budget" min="1" max="1" step="1" value="1">
+              </label>
+              <button class="btn btn--primary" type="button" id="run-svd" data-testid="run-svd">Compute SVD</button>
+              <p class="lab-svd-status" id="svd-status" role="status" aria-live="polite" data-testid="svd-status"></p>
+            </div>
+
+            <div class="lab-intro" id="intro-steps" data-testid="intro-steps" hidden>
+              <p class="lab-intro-head"><span class="eyebrow">Before the animation</span>
+                <button class="btn btn--quiet" type="button" id="lab-explain-skip" data-testid="lab-explain-skip">Skip explanation</button></p>
+              <ol class="lab-intro-list" id="intro-list">
+                <li data-step="0">The image is a matrix <i>A</i> of pixel brightnesses, one matrix per colour channel.</li>
+                <li data-step="1">The SVD writes it as <i>A</i> = <i>U</i> Σ <i>V</i><sup>T</sup>.</li>
+                <li data-step="2" id="intro-step-3">Σ holds the singular values, largest first; the columns of <i>U</i> and <i>V</i> are the singular vectors.</li>
+              </ol>
+              <p class="muted lab-intro-after">Then reconstruction starts at rank 1 and adds one component at a time.</p>
+            </div>
+
+            <label class="lab-check lab-component-toggle"><input type="checkbox" id="show-component" data-testid="show-component" disabled>
+              Show component <i>i</i> = <i>k</i> (the layer just added)</label>
+          </div>
+
+          <div class="lab-panel" id="panel-blocks" role="tabpanel" aria-labelledby="tab-blocks" hidden>
+            <h3 class="lab-step"><span class="lab-step-no">C</span> Adaptive blocks</h3>
+            <p class="muted">Cut the image into tiles, run an exact SVD on every tile, and give each tile its own rank.</p>
+            <div class="lab-controls">
+              <label class="field">Tile size (pixels)
+                <select id="block-size" data-testid="block-size">
+                  <option value="8">8 × 8</option><option value="16">16 × 16</option>
+                  <option value="32" selected>32 × 32</option><option value="64">64 × 64</option>
+                </select>
+              </label>
+              <label class="field">Retained detail energy: <output id="block-energy-out" class="mono">95.0 %</output>
+                <input type="range" id="block-energy" data-testid="block-energy" min="0.5" max="0.999" step="0.001" value="0.95">
+              </label>
+              <button class="btn btn--primary" type="button" id="run-blocks" data-testid="run-blocks">Run adaptive blocks</button>
+              <p class="lab-svd-status" id="blocks-status" role="status" aria-live="polite" data-testid="blocks-status"></p>
+              <p class="note" id="blocks-disabled" hidden></p>
+            </div>
+            <div id="blocks-result" hidden>
+              <figure class="lab-heat">
+                <p class="lab-fig"><strong>Fig. 2</strong> Rank assigned to each tile</p>
+                <canvas id="heatmap" data-testid="heatmap" tabindex="0" role="img" aria-label="Rank heatmap"></canvas>
+                <div class="lab-legend" aria-hidden="true">
+                  <span class="mono" id="heat-min">0</span><span class="lab-ramp"></span><span class="mono" id="heat-max">1</span>
+                  <span class="muted">rank per tile</span>
+                </div>
+                <figcaption id="heat-caption" class="mono" aria-live="polite" data-testid="heat-caption">Hover or focus the map to read a tile.</figcaption>
+                <p class="sr-only" id="heat-summary"></p>
+              </figure>
+              <dl class="lab-dl" id="blocks-results" data-testid="blocks-results"></dl>
+              <div class="note secondary">
+                Detailed tiles get a higher rank because more of their energy sits in smaller singular values; smooth tiles are almost rank 1.
+                Limits: tile borders can show blocking; each tile stores its mean plus its own factors, storage per tile is
+                C·(1 + k<sub>t</sub>(b<sub>h</sub> + b<sub>w</sub> + 1)); an exact SVD is computed for every tile (slower for small tiles);
+                the ranks are chosen globally from the pooled singular values, not tile by tile.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# ---- below: component, charts, results (global only) ---- #}
+      <div id="lab-global-below">
+        <div class="lab-component" id="component-view" data-testid="component-view" hidden>
+          <h3 class="lab-step"><span class="lab-step-no">D</span> One singular component</h3>
+          <div class="lab-component-body">
+            <figure>
+              <img id="component-img" alt="Signed rank-one component" draggable="false">
+              <div class="lab-legend lab-legend--div" aria-hidden="true">
+                <span class="mono" id="comp-min">-v</span><span class="lab-ramp lab-ramp--div"></span><span class="mono" id="comp-max">+v</span>
+              </div>
+              <p class="muted lab-legend-key">cobalt = negative · paper = 0 · vermilion = positive</p>
+            </figure>
+            <div>
+              <p class="mono" id="component-text" aria-live="off"></p>
+              <p class="muted">A single component σ<sub>i</sub> u<sub>i</sub> v<sub>i</sub><sup>T</sup> is signed: it adds light in some places and
+                removes it in others, so it is not itself a displayable photograph. The reconstruction is the sum of the first <i>k</i> of them.</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="lab-step lab-step--wide"><span class="lab-step-no">E</span> Read the numbers</h3>
+        <div class="lab-charts" id="lab-charts">
+          <figure class="lab-chart"><div id="chart-sigma" data-testid="chart-sigma"></div></figure>
+          <figure class="lab-chart"><div id="chart-energy" data-testid="chart-energy"></div></figure>
+          <figure class="lab-chart"><div id="chart-error" data-testid="chart-error"></div></figure>
+          <figure class="lab-chart"><div id="chart-quality" data-testid="chart-quality"></div></figure>
+          <figure class="lab-chart lab-chart--wide"><div id="chart-storage" data-testid="chart-storage"></div></figure>
+        </div>
+
+        <div class="lab-results" id="results" data-testid="results">
+          <h3 class="lab-step"><span class="lab-step-no">F</span> Results at the displayed rank</h3>
+          <dl class="lab-dl">
+            <div><dt>Rank <i>k</i></dt><dd id="r-k" data-testid="r-k">–</dd></div>
+            <div><dt>Image size</dt><dd id="r-dim" data-testid="r-dim">–</dd></div>
+            <div><dt>Retained energy E(k)</dt><dd id="r-energy" data-testid="r-energy">–</dd></div>
+            <div><dt>Frobenius error after 8-bit rounding</dt><dd id="r-frob" data-testid="r-frob">–</dd></div>
+            <div><dt>Spectral error ‖A − A<sub>k</sub>‖<sub>F</sub> <span class="muted" id="r-spec-kind"></span></dt><dd id="r-spectral" data-testid="r-spectral">–</dd></div>
+            <div><dt>Relative error</dt><dd id="r-rel" data-testid="r-rel">–</dd></div>
+            <div><dt>MSE</dt><dd id="r-mse" data-testid="r-mse">–</dd></div>
+            <div><dt>PSNR</dt><dd id="r-psnr" data-testid="r-psnr">–</dd></div>
+            <div><dt>SSIM</dt><dd id="r-ssim" data-testid="r-ssim">–</dd></div>
+            <div><dt>Stored scalars k(m+n+1)·channels</dt><dd id="r-stored" data-testid="r-stored">–</dd></div>
+            <div><dt>Scalar-count ratio <span class="muted">(NOT a file-size reduction)</span></dt><dd id="r-ratio" data-testid="r-ratio">–</dd></div>
+            <div><dt>Your uploaded file</dt><dd id="r-source" data-testid="r-source">–</dd></div>
+            <div><dt>Reconstruction as PNG <span class="muted">(not an SVD file)</span></dt><dd id="r-png" data-testid="r-png">–</dd></div>
+          </dl>
+          <p class="note secondary">The scalar count k(m+n+1) is a mathematical count of numbers to store, not a file size. Plain SVD factors
+            kept as 64-bit floats can take more space than the original image, and JPEG or WebP normally compress better than a simple
+            truncated SVD. The spectral error is exact mathematics before rounding; the pixel error is measured after rounding and clipping to 8-bit values.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
