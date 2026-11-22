@@ -125,7 +125,7 @@ svdcomp-web            # open http://127.0.0.1:5000  (add ?intro=0 to skip the s
 pytest -q              # backend + browser tests (browser tests skip if Playwright/Chrome are absent)
 ```
 
-The mathematics (2 × 2 worked example, Eckart–Young theorem, likely questions) is explained simply in [`documentation/svd-explained.pdf`](documentation/svd-explained.pdf). Assigned reference: <https://arxiv.org/html/2512.16226v1>.
+A full plain-English guide (terms, the maths, how the code works, and a picture tour of every graph and feature) is in [`documentation/complete-guide.pdf`](documentation/complete-guide.pdf); a short version with the 2 × 2 worked example is [`documentation/svd-explained.pdf`](documentation/svd-explained.pdf). Assigned reference: <https://arxiv.org/html/2512.16226v1>.
 
 Note: the scalar count k(m+n+1) is not a file size, JPEG/WebP usually beat plain SVD, and randomized SVD is an approximation.
 

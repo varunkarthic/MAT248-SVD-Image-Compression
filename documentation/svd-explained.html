@@ -68,6 +68,7 @@
 <li><b>Quality:</b> MSE (average squared error), PSNR = 10 log<sub>10</sub>(255² / MSE) in dB (higher is better), SSIM (closer to 1 is better).</li>
 </ul>
 
+<figure><img src="guide_images/rank-strip.png" style="width:100%"><figcaption>Real output: the original photo, then rank 1, 5, 20 and 50 (79.3 %, 92.3 %, 98.3 % and 99.6 % of the energy kept).</figcaption></figure>
 <h2>6. What the demo shows</h2>
 <ol>
 <li>Choose a sample image (or upload your own) and press <b>Compute SVD</b>. <i>Exact</i> = full Jacobi SVD; <i>Randomized</i> = a faster approximation of the leading layers.</li>
@@ -77,6 +78,10 @@
 <li><b>Adaptive blocks</b>: the image is cut into tiles; detailed tiles get more rank.</li>
 </ol>
 
+<figure><img src="guide_images/comparison.png" style="width:62%"><figcaption>The comparison stage: drag the white handle to wipe between the original (left) and the rank-20 rebuild (right).</figcaption></figure>
+<figure><img src="guide_images/chart-sigma.png" style="width:80%"><figcaption>Singular values (log scale): blue bars are the layers kept, grey bars are dropped.</figcaption></figure>
+<figure><img src="guide_images/chart-energy.png" style="width:80%"><figcaption>Retained energy E(k): how much of the picture the first k layers keep.</figcaption></figure>
+<figure><img src="guide_images/blocks.png" style="width:45%"><figcaption>Adaptive blocks: the rank map shows which tiles get more layers (dark blue = detail).</figcaption></figure>
 <h2>7. Honest limits</h2>
 <ul>
 <li>k(m+n+1) is a <i>count of numbers</i>, not a file size. A reconstruction saved as PNG is just an image.</li>
