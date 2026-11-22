@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SVD LAB: the complete guide</title>
+<style>
+  @page { size: A4; margin: 17mm 16mm; }
+  body { font: 11pt/1.55 "Segoe UI", Arial, sans-serif; color: #1c1e23; }
+  .cover { text-align: center; padding-top: 55mm; page-break-after: always; }
+  .cover h1 { font: 700 40pt Georgia, serif; margin: 0; } .cover h1 span { color: #1f4ea3; }
+  .cover p { font: italic 15pt Georgia, serif; color: #555; margin: 4mm 0; }
+  .cover .contents { text-align: left; max-width: 105mm; margin: 14mm auto 0; font: 11pt "Segoe UI", Arial; font-style: normal; color: #1c1e23; }
+  h1.part { font: 700 21pt Georgia, serif; color: #1f4ea3; margin: 0 0 3mm; padding-bottom: 1.5mm; border-bottom: 2px solid #1f4ea3; page-break-before: always; }
+  h2 { font: 700 14pt Georgia, serif; margin: 7mm 0 2mm; page-break-after: avoid; }
+  h3 { font: 700 11.5pt "Segoe UI", Arial; margin: 4mm 0 1mm; page-break-after: avoid; }
+  p { margin: 0 0 2.6mm; } ul, ol { margin: 0 0 3mm 4mm; padding-left: 4mm; } li { margin-bottom: 1.2mm; }
+  .eq { font: 12.5pt Cambria, "Times New Roman", serif; text-align: center; margin: 3mm 0; }
+  .box { border-left: 3px solid #1f4ea3; background: #eef2fa; padding: 2.5mm 4mm; margin: 3mm 0; page-break-inside: avoid; }
+  .warn { border-left-color: #c83e26; background: #fbebe7; }
+  table.m { display: inline-table; border-left: 1.5px solid #000; border-right: 1.5px solid #000; border-radius: 3px; margin: 0 1.5mm; vertical-align: middle; font: 10.5pt Consolas, monospace; }
+  table.m td { padding: .4mm 2.6mm; text-align: right; }
+  table.t { border-collapse: collapse; width: 100%; margin: 2mm 0 4mm; font-size: 10pt; page-break-inside: avoid; }
+  table.t th, table.t td { border: 1px solid #c9c4b6; padding: 1.4mm 2.4mm; text-align: left; vertical-align: top; } table.t th { background: #efe9dc; }
+  figure { margin: 3mm 0 5mm; page-break-inside: avoid; text-align: center; }
+  figure img { max-width: 100%; border: 1px solid #d9d2c2; }
+  figcaption { font-size: 9.5pt; color: #555; margin-top: 1.5mm; text-align: left; }
+  code { font: 9.5pt Consolas, monospace; background: #f1efe8; padding: 0 1mm; }
+  pre { font: 9pt/1.4 Consolas, monospace; background: #f1efe8; padding: 3mm; white-space: pre-wrap; page-break-inside: avoid; }
+  .row { text-align: center; margin: 3mm 0; page-break-inside: avoid; }
+  .small { font-size: 9.5pt; color: #555; }
+</style></head><body>
+
+<div class="cover">
+  <h1>SVD <span>LAB</span></h1>
+  <p>The complete guide</p>
+  <p style="font-size:12pt">What the SVD is, how it works in maths and in code, and how to use every part of the site.</p>
+  <div class="contents">
+    <b>Contents</b>
+    <ol>
+      <li>The big idea in plain English</li>
+      <li>The words you need (glossary)</li>
+      <li>The SVD, mathematically</li>
+      <li>How the computer does it (computer science)</li>
+      <li>A tour of the site, with pictures</li>
+      <li>Limits, questions and how to run it</li>
+    </ol>
+  </div>
+</div>
+
+<!-- =============================================================== PART 1 -->
+<h1 class="part" style="page-break-before: avoid; margin-top: 0">1. The big idea in plain English</h1>
+<p>A picture on your screen is just a big table of numbers. Each little square (a <b>pixel</b>) has a number for how bright it is, from 0 (black) to 255 (white). A table of numbers like that is called a <b>matrix</b>.</p>
+<p>The <b>Singular Value Decomposition (SVD)</b> is a way of cutting any matrix into simple layers, like the layers of an onion or the tracks of a song. The layers are sorted from <i>most important</i> to <i>least important</i>. The first layer holds the big shapes (light and dark areas). Later layers add finer and finer detail.</p>
+<p><b>Compression idea:</b> if we keep only the first few layers and throw the rest away, we still get a recognisable picture, but we need to store far fewer numbers. The more layers we keep, the closer we get to the original.</p>
+<figure><img src="guide_images/rank-strip.png">
+<figcaption><b>Figure 1.</b> Real output from this project. Left to right: the original photo, then the picture rebuilt from only 1, 5, 20 and 50 layers. With 1 layer we keep 79.3 % of the "energy" (see glossary) but it looks like blurry stripes; with 20 layers we keep 98.3 % and the face is clear; with 50 layers we keep 99.6 %.</figcaption></figure>
+<div class="box"><b>In one sentence:</b> SVD splits a picture into ranked layers; keeping the strongest few layers gives the best possible smaller version of the picture, and that is what SVD LAB lets you see and play with.</div>
+
+<!-- =============================================================== PART 2 -->
+<h1 class="part">2. The words you need (glossary)</h1>
+<table class="t">
+<tr><th style="width:27%">Word</th><th>Plain-English meaning</th></tr>
+<tr><td><b>Pixel</b></td><td>One tiny square of a picture. In a grey picture it has one number (0 to 255). In a colour picture it has three: red, green and blue.</td></tr>
+<tr><td><b>Matrix</b></td><td>A rectangle of numbers in rows and columns. A picture that is 256 pixels tall and 256 wide is a 256 × 256 matrix. We call its size <i>m × n</i> (m rows, n columns).</td></tr>
+<tr><td><b>Row / column</b></td><td>A row goes across, a column goes down.</td></tr>
+<tr><td><b>Vector</b></td><td>A single list of numbers, such as one column of a matrix.</td></tr>
+<tr><td><b>Matrix multiplication</b></td><td>The entry in row <i>i</i>, column <i>j</i> of the answer is (row <i>i</i> of the first matrix) times (column <i>j</i> of the second), multiplying pairs and adding. Example: row (3, 1) times column (1, 1) = 3·1 + 1·1 = 4.</td></tr>
+<tr><td><b>Transpose</b> (Aᵀ)</td><td>Flip a matrix so rows become columns.</td></tr>
+<tr><td><b>Rank</b></td><td>How many truly different "patterns" a matrix contains. If one row is just 2 × another row, it adds nothing new. In this project, <b>rank <i>k</i></b> also means "keep <i>k</i> layers".</td></tr>
+<tr><td><b>Eigenvector / eigenvalue</b></td><td>A special direction that a matrix only stretches (does not turn). If <i>Av</i> = λ<i>v</i>, then <i>v</i> is an eigenvector and the stretch factor λ is the eigenvalue.</td></tr>
+<tr><td><b>Orthogonal / orthonormal</b></td><td>Vectors at right angles to each other (and each of length 1). A matrix made of such columns just rotates or flips things, without stretching them.</td></tr>
+<tr><td><b>Singular values</b> (σ)</td><td>The "importance scores" of the layers, written σ₁ ≥ σ₂ ≥ σ₃ ≥ … ≥ 0. Big σ = important layer.</td></tr>
+<tr><td><b>Norm (Frobenius)</b></td><td>A way to measure the "size" of a matrix: square every entry, add them all, take the square root. The size of an error matrix tells us how wrong a picture is.</td></tr>
+<tr><td><b>Energy</b></td><td>The sum of the squared singular values. "98 % energy retained" means the layers we kept carry 98 % of the total σ² sum.</td></tr>
+<tr><td><b>Reconstruction</b></td><td>The picture rebuilt from only the first <i>k</i> layers.</td></tr>
+<tr><td><b>MSE, PSNR, SSIM</b></td><td>Scores of picture quality (see Part 3).</td></tr>
+<tr><td><b>Exact vs randomized SVD</b></td><td>Two ways of computing the layers: a slower, full, very accurate way (Jacobi) and a faster way that only finds the first few layers using random numbers.</td></tr>
+</table>
+
+<!-- =============================================================== PART 3 -->
+<h1 class="part">3. The SVD, mathematically</h1>
+<h2>3.1 The statement</h2>
+<p>Every real <i>m × n</i> matrix <i>A</i> can be written as</p>
+<div class="eq"><i>A</i> = <i>U</i> Σ <i>V</i><sup>T</sup></div>
+<ul>
+<li><b><i>U</i></b> is <i>m × m</i> and <b><i>V</i></b> is <i>n × n</i>. Their columns (<i>u</i><sub>1</sub>, <i>u</i><sub>2</sub>, … and <i>v</i><sub>1</sub>, <i>v</i><sub>2</sub>, …) are perpendicular unit vectors. They act as rotations or reflections.</li>
+<li><b>Σ</b> (sigma) is <i>m × n</i>, zero everywhere except the diagonal, which holds the singular values σ₁ ≥ σ₂ ≥ … ≥ 0.</li>
+</ul>
+<p>Multiplying it out gives a <b>sum of simple layers</b>, each one a "column times row" matrix:</p>
+<div class="eq"><i>A</i> = σ<sub>1</sub><i>u</i><sub>1</sub><i>v</i><sub>1</sub><sup>T</sup> + σ<sub>2</sub><i>u</i><sub>2</sub><i>v</i><sub>2</sub><sup>T</sup> + σ<sub>3</sub><i>u</i><sub>3</sub><i>v</i><sub>3</sub><sup>T</sup> + …</div>
+<p>Each layer σ<sub>i</sub><i>u</i><sub>i</sub><i>v</i><sub>i</sub><sup>T</sup> is a rank-1 matrix: one vertical pattern <i>u</i><sub>i</sub> times one horizontal pattern <i>v</i><sub>i</sub>, scaled by its importance σ<sub>i</sub>.</p>
+<h2>3.2 Picture in your head (geometry)</h2>
+<p>A matrix takes a circle of arrows and turns it into an ellipse. The SVD says: first rotate (<i>V</i><sup>T</sup>), then stretch along the axes (Σ, by σ₁ in one direction and σ₂ in the other), then rotate again (<i>U</i>). The singular values are the lengths of the ellipse's axes.</p>
+<h2>3.3 How the numbers are found</h2>
+<ol>
+<li>Form <i>A</i><sup>T</sup><i>A</i> (a square, symmetric matrix).</li>
+<li>Find its eigenvalues λ<sub>i</sub> and eigenvectors. The eigenvectors are the columns <i>v</i><sub>i</sub> of <i>V</i>.</li>
+<li>The singular values are σ<sub>i</sub> = √λ<sub>i</sub>, sorted from large to small.</li>
+<li>The columns of <i>U</i> are <i>u</i><sub>i</sub> = <i>A v</i><sub>i</sub> / σ<sub>i</sub>.</li>
+</ol>
+<p><b>Why this works:</b> <i>A</i><sup>T</sup><i>A</i> = <i>V</i> Σ² <i>V</i><sup>T</sup>, so its eigenvalues are exactly σ².</p>
+<h2>3.4 Worked example (the one to do on a board)</h2>
+<div class="row"><i>A</i> = <table class="m"><tr><td>3</td><td>1</td></tr><tr><td>1</td><td>3</td></tr></table></div>
+<ol>
+<li><b><i>A</i><sup>T</sup><i>A</i></b> = <table class="m"><tr><td>10</td><td>6</td></tr><tr><td>6</td><td>10</td></tr></table> (for example 3·3 + 1·1 = 10 and 3·1 + 1·3 = 6).</li>
+<li><b>Eigenvalues:</b> det(<i>A</i><sup>T</sup><i>A</i> − λI) = (10 − λ)² − 36 = λ² − 20λ + 64 = (λ − 16)(λ − 4). So λ = 16 and λ = 4.</li>
+<li><b>Eigenvectors:</b> for 16, −6x + 6y = 0 gives (1, 1)/√2. For 4, 6x + 6y = 0 gives (1, −1)/√2.</li>
+<li><b>Singular values:</b> σ₁ = √16 = <b>4</b>, σ₂ = √4 = <b>2</b>.</li>
+<li><b><i>U</i>:</b> <i>u</i><sub>1</sub> = <i>A v</i><sub>1</sub>/4 = (1, 1)/√2 and <i>u</i><sub>2</sub> = <i>A v</i><sub>2</sub>/2 = (1, −1)/√2. So <i>U</i> = <i>V</i> = (1/√2)<table class="m"><tr><td>1</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr></table> and Σ = <table class="m"><tr><td>4</td><td>0</td></tr><tr><td>0</td><td>2</td></tr></table></li>
+<li><b>Check:</b> <i>U</i>Σ<i>V</i><sup>T</sup> = ½[[6, 2], [2, 6]] = [[3, 1], [1, 3]] = <i>A</i> ✓</li>
+<li><b>Keep one layer:</b> <i>A</i><sub>1</sub> = σ₁<i>u</i><sub>1</sub><i>v</i><sub>1</sub><sup>T</sup> = 4·½[[1, 1], [1, 1]] = <table class="m"><tr><td>2</td><td>2</td></tr><tr><td>2</td><td>2</td></tr></table></li>
+<li><b>Error:</b> <i>A</i> − <i>A</i><sub>1</sub> = [[1, −1], [−1, 1]]; its size is √(1+1+1+1) = <b>2</b> (which equals σ₂).</li>
+<li><b>Energy kept:</b> 9+1+1+9 = 20 = 16 + 4, so one layer keeps 16/20 = <b>80 %</b>.</li>
+<li><b>Two layers:</b> add σ₂<i>u</i><sub>2</sub><i>v</i><sub>2</sub><sup>T</sup> = [[1, −1], [−1, 1]] and we get <i>A</i> back exactly (100 %).</li>
+</ol>
+<div class="box warn">For this tiny matrix, storing one layer takes 5 numbers, more than the 4 in the matrix. It is only a teaching example; the saving appears for big pictures.</div>
+<h2>3.5 Why keeping the biggest layers is the best you can do</h2>
+<div class="box"><b>Eckart–Young–Mirsky theorem.</b> Among all matrices of rank at most <i>k</i>, the sum of the first <i>k</i> layers, <i>A</i><sub>k</sub>, is the closest to <i>A</i> (measured by the Frobenius norm, and also by the 2-norm). The leftover error is
+<div class="eq">‖<i>A</i> − <i>A</i><sub>k</sub>‖<sub>F</sub>² = σ<sub>k+1</sub>² + σ<sub>k+2</sub>² + …</div></div>
+<p>So the error is exactly the energy of the layers we threw away, and the fraction we keep is the <b>energy retained</b>:</p>
+<div class="eq"><i>E</i>(<i>k</i>) = (σ₁² + … + σ<sub>k</sub>²) / (σ₁² + σ₂² + …)</div>
+<h2>3.6 How many numbers do we store?</h2>
+<p>Keeping <i>k</i> layers means storing <i>k</i> columns of length <i>m</i>, <i>k</i> rows of length <i>n</i> and <i>k</i> singular values:</p>
+<div class="eq"><i>k</i>(<i>m</i> + <i>n</i> + 1) numbers, instead of <i>m · n</i></div>
+<p>For our 256 × 256 photo with <i>k</i> = 20: 20 × 513 = 10 260 numbers instead of 65 536 (about 6.4 times fewer). A colour picture has three matrices (red, green, blue), so we multiply by 3.</p>
+<div class="box warn"><b>Important honesty point.</b> This is a <i>count of numbers</i>, not a file size. Real files also depend on how many bytes each number takes and on extra tricks like JPEG's. Plain SVD can even be bigger than the original file, and JPEG or WebP normally beat it.</div>
+<h2>3.7 Scoring picture quality</h2>
+<table class="t">
+<tr><th style="width:20%">Score</th><th>Meaning</th><th style="width:32%">Good means</th></tr>
+<tr><td><b>MSE</b></td><td>Average of (original − rebuilt)² over all pixels.</td><td>small</td></tr>
+<tr><td><b>PSNR</b> (dB)</td><td>10 · log₁₀(255² / MSE). A scale that turns MSE into "decibels".</td><td>big (30 dB is decent, 40 dB very good)</td></tr>
+<tr><td><b>SSIM</b></td><td>Compares local brightness, contrast and structure; 1 means identical.</td><td>close to 1</td></tr>
+<tr><td><b>Relative error</b></td><td>(size of the error) ÷ (size of the picture), as a percentage.</td><td>small</td></tr>
+</table>
+<p>Two kinds of error appear on the site. The <b>spectral error</b> is the exact mathematics from the formula above. The <b>pixel error</b> is measured on the final picture after rounding to whole numbers 0 to 255, so it is very slightly different.</p>
+
+<!-- =============================================================== PART 4 -->
+<h1 class="part">4. How the computer does it (computer science)</h1>
+<p>The project is written in Python. The rule of the project: <b>the important algorithms are written from scratch</b>. NumPy is only used as a fast container for arrays and for adding and multiplying them. No library SVD, no image library.</p>
+<table class="t">
+<tr><th style="width:22%">File</th><th>What it does</th></tr>
+<tr><td><code>formats.py</code></td><td>Reads and writes PNG, BMP and PGM/PPM files by hand (decompresses the PNG data, undoes PNG's row filters, checks sizes and errors).</td></tr>
+<tr><td><code>linalg.py</code></td><td>The maths: Householder QR, the Jacobi SVD and the randomized SVD.</td></tr>
+<tr><td><code>compress.py</code></td><td>Turns an image into matrices, calls the SVD, rebuilds rank-<i>k</i> pictures, adaptive blocks, storage counts.</td></tr>
+<tr><td><code>metrics.py</code></td><td>MSE, PSNR, SSIM and relative error.</td></tr>
+<tr><td><code>lab.py</code>, <code>samples.py</code></td><td>Data for the website: graphs' numbers, single layers, the 2×2 example, the nine sample images.</td></tr>
+<tr><td><code>web.py</code> + <code>static/</code></td><td>The website: a small Flask server and the browser code (HTML, CSS, JavaScript).</td></tr>
+<tr><td><code>cli.py</code></td><td>The command-line tool: <code>svdcomp compress / info / benchmark</code>.</td></tr>
+</table>
+<h2>4.1 From picture to matrices</h2>
+<ol>
+<li>The file bytes are decoded into a 3-D array of whole numbers 0–255 (height × width × channels).</li>
+<li>The channels are split: a grey picture gives one matrix, an RGB picture gives three (red, green, blue), each converted to decimals.</li>
+<li>All channels are decomposed together as a batch (one pass of maths over a stack of matrices), which is faster than doing them one by one.</li>
+</ol>
+<h2>4.2 The exact method: one-sided Jacobi SVD</h2>
+<p>Idea in plain words: take the columns of the matrix and keep rotating pairs of columns until all columns are at right angles to each other. When that is done, the <i>lengths</i> of the columns are the singular values, and the normalised columns give <i>U</i>.</p>
+<pre>repeat until nothing changes much (a "sweep" visits every pair of columns):
+    for each pair of columns (p, q):
+        a = p·p,  b = q·q,  c = p·q          # dot products
+        if |c| is not tiny:
+            choose a rotation angle that makes the new p and q perpendicular
+            rotate the two columns (and the matching columns of V)
+singular value i  = length of column i
+u_i               = column i divided by its length
+sort from biggest to smallest</pre>
+<ul>
+<li><b>Pros:</b> very accurate, gives <i>all</i> singular values, simple to check.</li>
+<li><b>Cons:</b> slow for large images (work grows roughly like <i>m·n²</i> per sweep). That is why the site allows the exact method only up to 512 × 512 pixels.</li>
+<li>Pairs are visited in a "round-robin" order so many pairs can be rotated at once in the batched code.</li>
+</ul>
+<h2>4.3 The fast method: randomized SVD</h2>
+<ol>
+<li>Make a random matrix Ω with <i>k</i> + 10 columns (a few extra, called oversampling).</li>
+<li>Multiply: <i>Y</i> = <i>A</i>Ω. The columns of <i>Y</i> are random mixtures of the columns of <i>A</i>, and they capture its main directions.</li>
+<li>Repeat twice: multiply by <i>A</i>ᵀ and <i>A</i> again (power iterations) and clean up with QR. This sharpens the result when the singular values decay slowly.</li>
+<li>Run <b>QR</b> (Householder reflections) on <i>Y</i> to get <i>Q</i>, a set of perpendicular columns spanning the main directions.</li>
+<li>Compute the small matrix <i>B</i> = <i>Q</i>ᵀ<i>A</i>, which is only about <i>k</i> rows tall, and do an SVD of <i>B</i> (cheap).</li>
+<li>Combine: <i>U</i> = <i>Q</i> × (the small <i>U</i>).</li>
+</ol>
+<p>Cost grows like <i>m·n·k</i> instead of <i>m·n²</i>, so it is much faster when <i>k</i> is small. It is an <b>approximation</b>: the picture it gives is very good, but it is not guaranteed to equal the mathematically best rank-<i>k</i> picture, so the site labels its error as an estimate.</p>
+<h2>4.4 Making the rank-<i>k</i> picture</h2>
+<pre>for every channel:
+    take the first k columns of U, multiply each by its singular value,
+    multiply by the first k rows of V^T        # = sigma1*u1*v1^T + ... + sigmak*uk*vk^T
+round to whole numbers and clip to 0..255
+stack the channels back into one picture</pre>
+<p>The SVD is computed <b>once</b> and kept in memory. Changing <i>k</i> afterwards only needs this cheap multiplication, which is why the slider and the animation are quick.</p>
+<h2>4.5 Adaptive blocks</h2>
+<ol>
+<li>Cut the picture into small tiles (8, 16, 32 or 64 pixels square) and subtract each tile's average brightness (stored as one number).</li>
+<li>Do an exact SVD of every tile.</li>
+<li>Pool the squared singular values of <i>all</i> tiles, sort them, and keep the largest until the chosen share of detail energy (for example 95 %) is reached.</li>
+<li>A busy tile (edges, texture) ends up with a high rank; a flat tile ends up with rank 0 or 1.</li>
+</ol>
+<p>Storage per tile is channels × (1 + <i>k</i><sub>t</sub>(height + width + 1)).</p>
+<h2>4.6 What happens when you click things on the site</h2>
+<table class="t">
+<tr><th style="width:30%">Action</th><th>Behind the scenes</th></tr>
+<tr><td>Upload an image</td><td>The browser sends it to the server. The server checks the real content (not the file name), limits the size, decodes it, remembers it in a small in-memory cache and replies with a secret token.</td></tr>
+<tr><td>Compute SVD</td><td>The server runs the exact or randomized SVD once, stores the factors, and sends back the singular values and the curves for the graphs.</td></tr>
+<tr><td>Move the rank slider / Play</td><td>The browser asks for "the picture at rank <i>k</i>". The server rebuilds it from the stored factors and sends it with its scores. The animation asks for one rank at a time, waits for the answer, shows it, then waits before asking for the next.</td></tr>
+<tr><td>Show component</td><td>The server returns the single layer σ<sub>i</sub>u<sub>i</sub>v<sub>i</sub><sup>T</sup> drawn with a blue–white–red colour scale.</td></tr>
+<tr><td>Adaptive blocks</td><td>The server runs the tile method and returns the picture plus the rank of every tile.</td></tr>
+</table>
+<p><b>Safety checks on uploads:</b> maximum 20 MB; maximum 4 million pixels; the image size is read from the file header <i>before</i> memory is reserved; PNG decompression is capped so a "zip bomb" cannot explode; file names are never inserted into the page as HTML; a strict content policy blocks outside scripts; nothing leaves your computer.</p>
+
+<!-- =============================================================== PART 5 -->
+<h1 class="part">5. A tour of the site, with pictures</h1>
+<p>Start it with <code>svdcomp-web</code> and open <b>http://127.0.0.1:5000</b>. Everything runs on your own computer and works without internet.</p>
+
+<h2>5.1 The opening animation</h2>
+<figure><img src="guide_images/intro-open.png" style="width:78%">
+<figcaption><b>Figure 2.</b> When the site opens, scattered grey pixels drift together and form the letters S V D, then the site appears. Press <b>Skip intro</b> (or Esc) to jump in. The <b>Replay intro</b> button (top right) plays it again. Adding <code>?intro=0</code> to the address turns it off.</figcaption></figure>
+
+<h2>5.2 Choosing an image</h2>
+<figure><img src="guide_images/upload-box.png" style="width:78%">
+<figcaption><b>Figure 3.</b> The upload box. Click it, or drag a picture onto it. PNG, BMP and PGM/PPM go straight to our own decoders. JPEG, WebP, GIF and AVIF are first converted to PNG inside your browser (for a GIF only the first frame is used). Bad or oversized files give a friendly message and nothing breaks.</figcaption></figure>
+<figure><img src="guide_images/gallery.png">
+<figcaption><b>Figure 4.</b> Nine bundled sample images, each chosen to teach something.</figcaption></figure>
+<table class="t">
+<tr><th style="width:24%">Sample</th><th>What it shows about the SVD</th></tr>
+<tr><td>Smooth gradient</td><td>Almost no detail: two layers rebuild it almost perfectly.</td></tr>
+<tr><td>Checkerboard</td><td>Repeated pattern: exactly rank 2, so 2 layers are perfect.</td></tr>
+<tr><td>Geometric shapes</td><td>Straight edges are cheap; circles and diagonals need more layers.</td></tr>
+<tr><td>Edge-heavy pattern</td><td>Diagonal stripes and rings: the layers fade away slowly.</td></tr>
+<tr><td>Low-rank construction</td><td>Built from exactly 5 layers, so after 5 everything is rebuilt.</td></tr>
+<tr><td>Complex texture</td><td>Noise-like detail everywhere: a bad case for SVD compression.</td></tr>
+<tr><td>Tiny 16 × 16 face</td><td>So small you can see each pixel as a matrix entry; exact SVD is instant.</td></tr>
+<tr><td>Photograph (grey / colour)</td><td>A real picture (NASA, public domain). Colour is three matrices.</td></tr>
+</table>
+
+<h2>5.3 The "processing" animation</h2>
+<figure><img src="guide_images/intro-processing.png" style="width:78%">
+<figcaption><b>Figure 5.</b> Every time you load an image, a short animation plays before the results: pixels become a matrix, the matrix splits into <i>U</i> × Σ × <i>V</i><sup>T</sup>, the singular values line up from biggest to smallest, and a small picture is rebuilt. It is an illustration with a small example, not your image (a note at the bottom says so). The real computation happens on the server.</figcaption></figure>
+
+<h2>5.4 Computing the SVD and the controls</h2>
+<figure><img src="guide_images/controls.png" style="width:55%">
+<figcaption><b>Figure 6.</b> The control panel. <b>Method:</b> <i>Randomized</i> is fast and finds the leading layers; <i>Exact</i> finds all layers (slower, up to 512 × 512). <b>Rank budget:</b> for randomized only, how many layers to compute. <b>Compute SVD</b> runs it. The "before the animation" box explains in three steps what you are about to watch (you can skip it).</figcaption></figure>
+
+<h2>5.5 The summary strip</h2>
+<figure><img src="guide_images/summary.png">
+<figcaption><b>Figure 7.</b> Right above the picture and graphs, the most important facts, updating live as the rank changes.</figcaption></figure>
+<table class="t">
+<tr><th style="width:30%">Item</th><th>Meaning</th></tr>
+<tr><td>Name, size, channels, input format, file size</td><td>Facts about the file you loaded.</td></tr>
+<tr><td>Rank <i>k</i></td><td>How many layers are being used right now.</td></tr>
+<tr><td>Retained energy E(k)</td><td>How much of the picture's total layer-strength those <i>k</i> layers keep.</td></tr>
+<tr><td>Frobenius error / spectral error / relative error</td><td>How far the rebuilt picture is from the original (after rounding / by the exact formula / as a percentage).</td></tr>
+<tr><td>MSE, PSNR, SSIM</td><td>Quality scores (smaller, bigger, closer-to-1 is better).</td></tr>
+<tr><td>Stored scalars</td><td>The count <i>k</i>(<i>m</i>+<i>n</i>+1) × channels, with the original count for comparison.</td></tr>
+<tr><td>Scalar-count ratio</td><td>Original count ÷ stored count. Not a file-size saving. Below 1× means the layers take <i>more</i> numbers than the picture.</td></tr>
+<tr><td>Your uploaded file / Reconstruction as PNG</td><td>Real byte sizes: your file, and the rebuilt picture saved as PNG (that is just a picture, not an SVD file).</td></tr>
+</table>
+
+<h2>5.6 Comparing the original and the rebuilt picture</h2>
+<figure><img src="guide_images/comparison.png" style="width:72%">
+<figcaption><b>Figure 8.</b> The main stage. Drag the white handle (or use ← → keys on it) to wipe between the <b>Original</b> (left) and the <b>rank-<i>k</i> rebuild</b> (right). Here <i>k</i> = 20: the face is clear, fine texture is still missing.</figcaption></figure>
+<ul>
+<li><b>Rank slider and number box:</b> choose any <i>k</i>. They stay in sync. Arrow keys change <i>k</i> by 1, Shift+arrows by 10, Home/End jump to the ends.</li>
+<li><b>Play / Pause:</b> rebuilds the picture layer by layer from rank 1 up to a target. Every frame is a real rank-<i>k</i> result, not a blur. <b>Restart</b> goes back to 1; <b>Prev / Next</b> step one rank; <b>Speed</b> is 0.5×–4× (1× is a slow, easy-to-follow pace).</li>
+<li><b>Side by side:</b> shows the two pictures next to each other instead of the wipe.</li>
+<li><b>Show error image:</b> a map of where the picture is wrong (dark = bigger error).</li>
+<li><b>Fullscreen, Download PNG, Reset image:</b> do what they say. The download is exactly the rank on screen.</li>
+<li><b>The equation under the picture</b> always shows the same <i>k</i> and the value of σ<sub>k</sub>.</li>
+</ul>
+
+<h2>5.7 One layer on its own</h2>
+<figure><img src="guide_images/component.png">
+<figcaption><b>Figure 9.</b> "Show component" draws a single layer σ<sub>i</sub>u<sub>i</sub>v<sub>i</sub><sup>T</sup>. Blue = this layer makes pixels darker, white = no change, red = brighter. It also tells you σ<sub>i</sub>, its own share of the energy and the running total. A single layer is not a normal photo because it holds both positive and negative values; only the <i>sum</i> of layers is a picture.</figcaption></figure>
+
+<h2>5.8 The five graphs</h2>
+<p>All five are drawn from numbers computed by the project's own code. The red dashed line and dot always mark the rank <i>k</i> you are currently looking at, so the graphs move with the picture.</p>
+
+<h3>Graph 1: Singular values</h3>
+<figure><img src="guide_images/chart-sigma.png" style="width:90%">
+<figcaption><b>Figure 10.</b> The size of each layer's importance σ<sub>i</sub> (vertical, <i>log scale</i>, so each gridline is ten times bigger) against the layer number <i>i</i> (horizontal, also log scale, so the first layers are spread out). Blue bars are layers included at the current <i>k</i>; grey bars are left out. <b>How to read it:</b> a steep fall means few layers matter (easy to compress); a flat, slowly falling line means detail everywhere (hard). For colour pictures there is one line each for red, green and blue.</figcaption></figure>
+
+<h3>Graph 2: Retained energy</h3>
+<figure><img src="guide_images/chart-energy.png" style="width:90%">
+<figcaption><b>Figure 11.</b> E(<i>k</i>), the percentage of total energy kept, against the rank (horizontal axis is log scale). It starts high and flattens near 100 %. <b>How to read it:</b> find where the curve gets close to 100 %: adding more layers after that gains very little.</figcaption></figure>
+
+<h3>Graph 3: Approximation error</h3>
+<figure><img src="guide_images/chart-error.png" style="width:90%">
+<figcaption><b>Figure 12.</b> How wrong the rebuilt picture is, against the rank. The dashed line is the exact mathematical error from the singular values (before rounding; an estimate if you used the randomized method). The circles are measured on the actual rounded picture. <b>How to read it:</b> it always falls as <i>k</i> grows; the two should stay very close together.</figcaption></figure>
+
+<h3>Graph 4: Quality (PSNR and SSIM)</h3>
+<figure><img src="guide_images/chart-quality.png" style="width:90%">
+<figcaption><b>Figure 13.</b> Top: PSNR in decibels (higher is better). Bottom: SSIM from 0 to 1 (1 means identical). These are measured at a set of sample ranks (the note under the graph says how many), because measuring every rank would be slow. <b>How to read it:</b> both climb as layers are added; around 30 dB and SSIM above 0.85 pictures start to look good.</figcaption></figure>
+
+<h3>Graph 5: Storage count</h3>
+<figure><img src="guide_images/chart-storage.png" style="width:90%">
+<figcaption><b>Figure 14.</b> How many numbers must be stored, <i>k</i>(<i>m</i>+<i>n</i>+1) × channels, against the rank (a straight line), with the original <i>m</i>·<i>n</i>·channels as a dashed line. Where the lines cross is the "crossover rank": beyond it the SVD layers take <i>more</i> numbers than the picture itself. <b>How to read it:</b> compression only makes sense to the left of the crossover. This is a count of numbers, not file size.</figcaption></figure>
+
+<h2>5.9 Adaptive blocks</h2>
+<figure><img src="guide_images/blocks.png" style="width:55%">
+<figcaption><b>Figure 15.</b> The <b>Adaptive blocks</b> tab. Choose the tile size and how much detail energy to keep, then press <b>Run adaptive blocks</b>. The coloured grid is the <b>rank map</b>: each square is a tile, pale = rank 0 (flat area, only the average is stored), dark blue = high rank (edges and detail). In this example only the tiles around the shapes get layers. Hover or focus a tile to read its rank. Below it: the mean rank, the scores and the storage count. Limits: tile borders can show blocky edges, and the exact SVD of many small tiles takes time.</figcaption></figure>
+
+<!-- =============================================================== PART 6 -->
+<h1 class="part">6. Limits, questions and how to run it</h1>
+<h2>6.1 Honest limits</h2>
+<ul>
+<li>SVD is "best" only in the sense of smallest matrix error; JPEG and WebP usually give much smaller files for the same look.</li>
+<li>The storage figure is a count of numbers, not bytes.</li>
+<li>The randomized SVD is an approximation, not the guaranteed best.</li>
+<li>Colour is handled as three separate grey matrices; real codecs also exploit colour relationships.</li>
+<li>Exact SVD is limited to 512 × 512 pixels because it is slow; uploads are limited to 4 million pixels and 20 MB.</li>
+<li>The animations on opening and loading are illustrations; the numbers and pictures in the lab are real.</li>
+</ul>
+<h2>6.2 Short answers to likely questions</h2>
+<p><b>Why are singular values the square roots of eigenvalues of AᵀA?</b> Because AᵀA = VΣ²Vᵀ, so its eigenvalues are σ².</p>
+<p><b>Why sort them?</b> So the first <i>k</i> layers are the biggest ones, which minimises the error (Eckart–Young).</p>
+<p><b>Is the SVD unique?</b> The singular values are; the vectors are only unique up to sign (and rotation when two singular values are equal).</p>
+<p><b>Why does a checkerboard compress so well?</b> It has only two truly different patterns (rank 2), so two layers rebuild it perfectly.</p>
+<p><b>Why is the exact method slow and the random one fast?</b> Exact rotates every pair of columns repeatedly (about <i>m·n²</i> work per sweep); random works on a small <i>k</i>-column sketch (about <i>m·n·k</i>).</p>
+<p><b>Why is the ratio below 1× for large <i>k</i>?</b> Each layer costs <i>m</i>+<i>n</i>+1 numbers, so many layers cost more than the original <i>m·n</i>.</p>
+<h2>6.3 Running everything</h2>
+<pre>git clone https://github.com/varunkarthic/MAT248-SVD-Image-Compression
+cd MAT248-SVD-Image-Compression
+py -m venv .venv
+.venv\Scripts\activate
+pip install -e ".[dev]"
+svdcomp-web                 # then open http://127.0.0.1:5000
+pytest -q                   # run the tests
+svdcomp info photo.png      # command-line tools
+svdcomp compress photo.png out.png -k 20</pre>
+<p class="small">Reference assigned for the course: https://arxiv.org/html/2512.16226v1. Sample photograph: NASA, astronaut Eileen Collins (public domain).</p>
+</body></html>
